@@ -8,9 +8,9 @@ import java.util.Optional;
 
 @Repository
 public class JpaUserRepositoryAdapter implements UserRepositoryPort {
-    private final JpaUserSpringRepository jpaRepository;
+    private final JpaUserRepository jpaRepository;
 
-    public JpaUserRepositoryAdapter(JpaUserSpringRepository jpaRepository) {
+    public JpaUserRepositoryAdapter(JpaUserRepository jpaRepository) {
         this.jpaRepository = jpaRepository;
     }
 
