@@ -1,4 +1,4 @@
-package com.filipecode.paper_trading;
+package com.filipecode.papertrading;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
