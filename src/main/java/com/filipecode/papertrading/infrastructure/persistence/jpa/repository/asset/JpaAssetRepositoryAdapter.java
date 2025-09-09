@@ -1,4 +1,4 @@
-package com.filipecode.papertrading.infrastructure.persistence.jpa.repository;
+package com.filipecode.papertrading.infrastructure.persistence.jpa.repository.asset;
 
 import com.filipecode.papertrading.domain.model.asset.Asset;
 import com.filipecode.papertrading.domain.model.asset.AssetType;

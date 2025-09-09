@@ -1,4 +1,4 @@
-package com.filipecode.papertrading.infrastructure.persistence.jpa.repository;
+package com.filipecode.papertrading.infrastructure.persistence.jpa.repository.user;
 
 import com.filipecode.papertrading.domain.model.user.User;
 import com.filipecode.papertrading.domain.repository.UserRepositoryPort;
