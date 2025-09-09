@@ -39,7 +39,7 @@ public class Transaction {
     private Portfolio portfolio;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "asset", nullable = false)
+    @JoinColumn(name = "asset_id", nullable = false)
     private Asset asset;
 
     @OneToOne(fetch = FetchType.LAZY)
