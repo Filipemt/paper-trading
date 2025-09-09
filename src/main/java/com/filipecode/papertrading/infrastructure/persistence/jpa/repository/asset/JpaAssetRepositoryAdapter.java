@@ -11,7 +11,7 @@ import java.util.Optional;
 @Repository
 public class JpaAssetRepositoryAdapter implements AssetRepositoryPort {
 
-    private JpaAssetRepository jpaRepository;
+    private final JpaAssetRepository jpaRepository;
 
     public JpaAssetRepositoryAdapter(JpaAssetRepository jpaRepository) {
         this.jpaRepository = jpaRepository;
