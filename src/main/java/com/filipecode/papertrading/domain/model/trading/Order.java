@@ -58,4 +58,8 @@ public class Order {
     @JoinColumn(name = "asset_id", nullable = false)
     private Asset asset;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transaction_id", nullable = false)
+    private Transaction transaction;
+
 }
