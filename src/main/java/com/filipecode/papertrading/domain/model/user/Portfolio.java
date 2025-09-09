@@ -2,6 +2,7 @@ package com.filipecode.papertrading.domain.model.user;
 
 import com.filipecode.papertrading.domain.model.trading.Order;
 import com.filipecode.papertrading.domain.model.trading.Position;
+import com.filipecode.papertrading.domain.model.trading.Transaction;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -34,5 +35,8 @@ public class Portfolio {
 
     @OneToMany(mappedBy = "portfolio", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Order> orders = new ArrayList<>();
+
+    @OneToMany(mappedBy = "portfolio", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Transaction> transactions = new ArrayList<>();
 
 }
