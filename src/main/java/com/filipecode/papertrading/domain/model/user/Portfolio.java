@@ -1,5 +1,6 @@
 package com.filipecode.papertrading.domain.model.user;
 
+import com.filipecode.papertrading.domain.model.trading.Order;
 import com.filipecode.papertrading.domain.model.trading.Position;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,9 +29,10 @@ public class Portfolio {
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "portfolio", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Position> positions = new ArrayList<>();
 
-    // Todo: Adicionar relacionamento com Order
+    @OneToMany(mappedBy = "portfolio", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Order> orders = new ArrayList<>();
 
 }

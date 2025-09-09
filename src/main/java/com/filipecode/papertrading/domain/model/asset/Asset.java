@@ -24,6 +24,4 @@ public class Asset {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private AssetType type;
-
-// Todo: Adicionar relacionamento com Order
 }
