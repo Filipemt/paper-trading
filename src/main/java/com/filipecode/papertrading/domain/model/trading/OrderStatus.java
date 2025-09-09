@@ -1,4 +1,4 @@
-package com.filipecode.papertrading.domain.model;
+package com.filipecode.papertrading.domain.model.trading;
 
 public enum OrderStatus {
     PENDING,

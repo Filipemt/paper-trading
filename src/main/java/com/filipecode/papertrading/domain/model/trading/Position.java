@@ -1,5 +1,7 @@
-package com.filipecode.papertrading.domain.model;
+package com.filipecode.papertrading.domain.model.trading;
 
+import com.filipecode.papertrading.domain.model.asset.Asset;
+import com.filipecode.papertrading.domain.model.user.Portfolio;
 import jakarta.persistence.*;
 import lombok.*;
 

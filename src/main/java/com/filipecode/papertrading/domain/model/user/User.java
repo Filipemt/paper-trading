@@ -1,4 +1,4 @@
-package com.filipecode.papertrading.domain.model;
+package com.filipecode.papertrading.domain.model.user;
 
 import jakarta.persistence.*;
 import lombok.*;

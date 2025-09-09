@@ -1,8 +1,9 @@
-package com.filipecode.papertrading.domain.model;
+package com.filipecode.papertrading.domain.model.trading;
 
+import com.filipecode.papertrading.domain.model.asset.Asset;
+import com.filipecode.papertrading.domain.model.user.Portfolio;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
