@@ -29,4 +29,7 @@ public class Portfolio {
 
     @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Position> positions = new ArrayList<>();
+
+    // Todo: Adicionar relacionamento com Order
+
 }
