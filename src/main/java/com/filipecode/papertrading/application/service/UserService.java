@@ -30,10 +30,10 @@ public class UserService implements RegisterUserUseCase {
     @Override
     public AuthResponseDTO execute(RegisterUserRequestDTO requestData) {
         if (userRepositoryPort.findByEmail(requestData.email()).isPresent()) {
-            throw new UserAlreadyExistsException("Attempt to register with an already existing email: " + requestData.email());
+            throw new UserAlreadyExistsException("Tentativa de registro com e-mail já existente: " + requestData.email());
         }
         if (userRepositoryPort.findByCpf(requestData.cpf()).isPresent()) {
-            throw new CpfAlreadyExistsException("Attempt to register with an already existing CPF: " + requestData.cpf());
+            throw new CpfAlreadyExistsException("Tentativa de registro com CPF já existente: " + requestData.cpf());
         }
         String encryptedPassword = passwordEncoder.encode(requestData.password());
 
