@@ -1,4 +1,4 @@
-package com.filipecode.papertrading.infrastructure.web.controller.dto;
+package com.filipecode.papertrading.infrastructure.web.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

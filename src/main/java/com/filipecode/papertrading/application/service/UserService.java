@@ -7,8 +7,8 @@ import com.filipecode.papertrading.domain.model.user.Portfolio;
 import com.filipecode.papertrading.domain.model.user.User;
 import com.filipecode.papertrading.domain.repository.UserRepositoryPort;
 import com.filipecode.papertrading.domain.service.TokenProviderPort;
-import com.filipecode.papertrading.infrastructure.web.controller.dto.AuthResponseDTO;
-import com.filipecode.papertrading.infrastructure.web.controller.dto.RegisterUserRequestDTO;
+import com.filipecode.papertrading.infrastructure.web.dto.AuthResponseDTO;
+import com.filipecode.papertrading.infrastructure.web.dto.RegisterUserRequestDTO;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

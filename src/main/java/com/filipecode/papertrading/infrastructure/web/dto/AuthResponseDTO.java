@@ -1,4 +1,4 @@
-package com.filipecode.papertrading.infrastructure.web.controller.dto;
+package com.filipecode.papertrading.infrastructure.web.dto;
 
 public record AuthResponseDTO(Long userId,
                               String name,
