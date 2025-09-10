@@ -53,8 +53,8 @@ public class UserService implements RegisterUserUseCase {
         String token = tokenProviderPort.generateToken(savedUser);
 
         return new AuthResponseDTO(
-                newUser.getId(),
-                newUser.getName(),
+                savedUser.getId(),
+                savedUser.getName(),
                 token
         );
     }
