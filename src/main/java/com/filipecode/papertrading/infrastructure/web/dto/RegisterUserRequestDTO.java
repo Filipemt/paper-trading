@@ -18,7 +18,7 @@ public record RegisterUserRequestDTO(
         String password,
 
         @NotBlank(message = "CPF não pode estar em branco.")
-        @CPF
+        @CPF(message = "Informe um CPF válido.")
         String cpf
 ) {
 }
