@@ -26,7 +26,7 @@ public class Position {
     private BigDecimal averagePrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "porfolio_id", nullable = false)
+    @JoinColumn(name = "portfolio_id", nullable = false)
     private Portfolio portfolio;
 
     @ManyToOne(fetch = FetchType.LAZY)
