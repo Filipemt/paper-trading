@@ -57,7 +57,7 @@ class AuthControllerTest {
         var expectedResponseDTO = new AuthResponseDTO(1L, "Filipe", "fake-jwt-token-123");
 
         // Configura o mock para o cenário de SUCESSO.
-        when(registerUserUseCase.execute(any(RegisterUserRequestDTO.class)))
+        when(registerUserUseCase.register(any(RegisterUserRequestDTO.class)))
                 .thenReturn(expectedResponseDTO);
 
         // --- ACT & ASSERT (Agir e Afirmar) ---
@@ -79,7 +79,7 @@ class AuthControllerTest {
         var requestDTO = new RegisterUserRequestDTO("John Doe", "john.doe@example.com", "password123", "12345678901");
 
         // Configura o mock para o cenário de FALHA.
-        when(registerUserUseCase.execute(any(RegisterUserRequestDTO.class)))
+        when(registerUserUseCase.register(any(RegisterUserRequestDTO.class)))
                 .thenThrow(new UserAlreadyExistsException("E-mail já cadastrado."));
 
         // --- ACT & ASSERT (Agir e Afirmar) ---

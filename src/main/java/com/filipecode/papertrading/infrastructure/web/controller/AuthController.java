@@ -23,7 +23,7 @@ public class AuthController {
 
     @PostMapping("register")
     public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody RegisterUserRequestDTO requestData) {
-        AuthResponseDTO response = registerUserUseCase.execute(requestData);
+        AuthResponseDTO response = registerUserUseCase.register(requestData);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

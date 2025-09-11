@@ -65,7 +65,7 @@ class UserServiceTest {
         when(tokenProviderPort.generateToken(savedUser)).thenReturn("jwt-token");
 
         // Act
-        AuthResponseDTO response = userService.execute(request);
+        AuthResponseDTO response = userService.register(request);
 
         // Assert
         verify(userRepositoryPort).save(userArgumentCaptor.capture());
@@ -93,7 +93,7 @@ class UserServiceTest {
         when(userRepositoryPort.findByEmail(request.email())).thenReturn(Optional.of(new User()));
 
         // Act & Assert
-        var exception = assertThrows(UserAlreadyExistsException.class, () -> userService.execute(request));
+        var exception = assertThrows(UserAlreadyExistsException.class, () -> userService.register(request));
         assertEquals("Attempt to register with an already existing email: " + request.email(), exception.getMessage());
     }
 
@@ -106,7 +106,7 @@ class UserServiceTest {
         when(userRepositoryPort.findByCpf(request.cpf())).thenReturn(Optional.of(new User()));
 
         // Act & Assert
-        var exception = assertThrows(CpfAlreadyExistsException.class, () -> userService.execute(request));
+        var exception = assertThrows(CpfAlreadyExistsException.class, () -> userService.register(request));
         assertEquals("Attempt to register with an already existing CPF: " + request.cpf(), exception.getMessage());
     }
 }

@@ -5,5 +5,5 @@ import com.filipecode.papertrading.infrastructure.web.dto.RegisterUserRequestDTO
 
 public interface RegisterUserUseCase {
 
-    AuthResponseDTO execute(RegisterUserRequestDTO requestData);
+    AuthResponseDTO register(RegisterUserRequestDTO requestData);
 }

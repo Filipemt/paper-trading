@@ -28,7 +28,7 @@ public class UserService implements RegisterUserUseCase {
     }
 
     @Override
-    public AuthResponseDTO execute(RegisterUserRequestDTO requestData) {
+    public AuthResponseDTO register(RegisterUserRequestDTO requestData) {
         if (userRepositoryPort.findByEmail(requestData.email()).isPresent()) {
             throw new UserAlreadyExistsException("Tentativa de registro com e-mail já existente: " + requestData.email());
         }
