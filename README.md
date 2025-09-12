@@ -1,106 +1,156 @@
-Documento de Design: Simulador de Carteira de Ações
-Versão: 1.0
-Data: 07/09/2025
+# Paper Trading API
 
-# 1. Visão Geral do Projeto
-O objetivo é desenvolver um sistema de "Paper Trading" como um projeto de portfólio para demonstrar competências em desenvolvimento backend com Java e Spring. A aplicação permitirá que usuários cadastrados gerenciem uma carteira de ações virtual, executando ordens de compra e venda baseadas em cotações de mercado (com dados reais ou simulados).
+API RESTful para uma plataforma de simulação de investimentos (Paper Trading), construída com Java, Spring Boot e princípios de Arquitetura Limpa.
 
-**Objetivos de Aprendizado:**
+---
 
-- Modelagem de domínio complexo.
-- Implementação de regras de negócio não-triviais.
-- Segurança com autenticação/autorização baseada em tokens (JWT).
-- Criação de uma API REST bem documentada (Swagger).
-- Boas práticas de persistência de dados com Spring Data JPA.
-- Implementação de testes unitários e de integração.
-- Deploy da aplicação em um ambiente de nuvem.
+## 1. Visão Geral do Projeto
+O objetivo deste projeto é desenvolver um sistema de "Paper Trading" robusto e escalável.  
+A aplicação permitirá que usuários se cadastrem, gerenciem uma carteira de investimentos virtual com um saldo inicial, e simulem a compra e venda de ativos financeiros (ações, FIIs) com base em cotações de mercado.
 
-# 2. Modelagem do Domínio (Entidades e Relacionamentos)
-Esta seção detalha as entidades centrais da aplicação.
+Este projeto serve como um estudo de caso prático na aplicação de padrões de arquitetura de software modernos em um ambiente backend.
 
-## 2.1. User
-Representa um usuário do sistema.
+---
 
-- **id (Long):** Chave primária (PK).
-- **name (String):** Nome completo.
-- **email (String):** E-mail de login. (Restrição: Único).
-- **password (String):** Senha criptografada (Hashed).
-- **cpf (String):** CPF do usuário. (Deve ser armazenado criptografado).
-- **role (Enum: USER, ADMIN):** Nível de acesso.
-- **createdAt (LocalDateTime):** Timestamp de criação.
-- **updatedAt (LocalDateTime):** Timestamp da última atualização.
+## 2. Arquitetura
+A aplicação é construída seguindo os princípios da **Arquitetura Hexagonal (Portas e Adaptadores)** para garantir um núcleo de negócio desacoplado, testável e independente de tecnologias externas (web, banco de dados).
 
-## 2.2. Asset
-Representa um ativo financeiro que pode ser negociado.
+### Princípio Central
+A regra fundamental é a **Regra da Dependência**, que estabelece que todas as dependências do código-fonte devem apontar para "dentro", em direção ao núcleo do negócio.
+- A camada de **infraestrutura** depende da camada de **aplicação**.
+- A camada de **aplicação** depende da camada de **domínio**.
+- O **domínio** não conhece ninguém.
 
-- **id (Long):** PK.
-- **ticker (String):** Código de negociação do ativo (ex: "PETR4"). (Restrição: Único).
-- **companyName (String):** Nome da empresa/fundo.
-- **type (Enum: STOCK, FII):** Tipo do ativo.
+### Estrutura de Pacotes
+```text
+com.filipecode.papertrading
+├── PaperTradingApplication.java  # Raiz do Component Scan
+│
+├── domain                        # O NÚCLEO: Regras de negócio puras
+│   ├── model                     # Entidades e Objetos de Valor (ex: User, Order)
+│   ├── repository                # PORTAS de saída (Interfaces de persistência)
+│   ├── service                   # PORTAS de saída (Serviços externos, ex: PriceProviderPort)
+│   └── exception                 # Exceções de negócio customizadas
+│
+├── application                   # O CÉREBRO: Orquestração dos casos de uso
+│   ├── usecase                   # PORTAS de entrada (Interfaces, ex: RegisterUserUseCase)
+│   └── service                   # Implementações dos casos de uso (ex: UserService)
+│
+└── infrastructure                # A CASCA: Detalhes de tecnologia (Spring, JPA, Web, etc.)
+    ├── web                       # ADAPTADORES de entrada (Controllers, DTOs, Exception Handlers)
+    ├── persistence               # ADAPTADORES de saída (JPA Repositories)
+    ├── client                    # ADAPTADORES de saída (APIs externas)
+    ├── config                    # Configurações do Spring (@Configuration, Beans)
+    └── security                  # Implementações de segurança (JWT, Filters)
+```
+---
 
-## 2.3. Portfolio (Carteira)
-O container que agrega as posições e o saldo de um usuário.
+## 3. Stack de Tecnologias
+- **Linguagem & Framework**: Java 17+, Spring Boot 3+
+- **Segurança**: Spring Security
+- **Persistência**: Spring Data JPA, Hibernate
+- **Banco de Dados**:
+    - Desenvolvimento: H2 (modo arquivo)
+    - Produção: PostgreSQL
+- **Migrações**: Flyway
+- **Testes**: JUnit 5, Mockito, Spring Boot Test
+- **Build Tool**: Maven
 
-- **id (Long):** PK.
-- **user (User):** Dono da carteira. (Relacionamento: @OneToOne).
-- **balance (BigDecimal):** Saldo em dinheiro disponível para negociações.
+---
 
-## 2.4. Position (Posição)
-Representa a custódia consolidada de um Asset dentro de um Portfolio.
+## 4. Como Executar o Projeto Localmente
 
-- **id (Long):** PK.
-- **portfolio (Portfolio):** Carteira à qual a posição pertence. (Relacionamento: @ManyToOne).
-- **asset (Asset):** O ativo em custódia. (Relacionamento: @ManyToOne).
-- **quantity (Integer):** Quantidade de unidades do ativo.
-- **averagePrice (BigDecimal):** Preço médio de compra do ativo para esta posição.
+### Pré-requisitos
+- Java (JDK) 17 ou superior
+- Apache Maven 3.8+
 
-## 2.5. Order (Ordem)
-Representa uma intenção de compra ou venda.
+### Passos
+1. Clone o repositório.
+2. Abra um terminal na raiz do projeto.
+3. Execute o build com o Maven:
+   ```bash
+   mvn clean install
+4. Rode a aplicação
+   ```bash
+    java -jar target/paper-trading-api-0.0.1-SNAPSHOT.jar
+5. A API estará disponível em: http://localhost:8080
 
-- **id (Long):** PK.
-- **portfolio (Portfolio):** Carteira que emitiu a ordem. (Relacionamento: @ManyToOne).
-- **asset (Asset):** Ativo a ser negociado. (Relacionamento: @ManyToOne).
-- **quantity (Integer):** Quantidade a ser negociada.
-- **price (BigDecimal):** Preço definido para ordens do tipo LIMIT.
-- **type (Enum: BUY, SELL).**
-- **orderType (Enum: MARKET, LIMIT).**
-- **status (Enum: PENDING, EXECUTED, CANCELLED).**
-- **createdAt (LocalDateTime):** Timestamp de criação da ordem.
+### Banco de Dados de Desenvolvimento (H2
+Console: http://localhost:8080/h2-console
 
-## 2.6. Transaction (Transação)
-Representa o registro histórico de uma Order que foi executada com sucesso.
+JDBC URL: jdbc:h2:file:./target/papertradingdb
 
-- **id (Long):** PK.
-- **portfolio (Portfolio):** Carteira envolvida. (Relacionamento: @ManyToOne).
-- **asset (Asset):** Ativo transacionado. (Relacionamento: @ManyToOne).
-- **order (Order):** Ordem que originou a transação. (Relacionamento: @ManyToOne).
-- **quantity (Integer):** Quantidade efetivamente transacionada.
-- **price (BigDecimal):** Preço unitário no momento da execução.
-- **type (Enum: BUY, SELL).**
-- **timestamp (LocalDateTime):** Momento exato da execução.
+User Name: sa
 
-# 3. Arquitetura de Software
-**Padrão Arquitetural:** Arquitetura Hexagonal (Ports & Adapters).
+Password: (vazio)
 
-**Justificativa:** Promover o desacoplamento entre a lógica de negócio e as tecnologias de infraestrutura (API, banco de dados, clientes HTTP), facilitando a testabilidade e a manutenção.
+---
 
-**Estrutura de Pacotes (Proposta):**
-- `com.seuprojeto.domain`: Contém as entidades e a lógica de negócio pura.
-- `com.seuprojeto.application`: Orquestra os casos de uso (services) e define as "Ports" (interfaces).
-- `com.seuprojeto.infrastructure`: Implementa os "Adapters" (controllers REST, repositórios JPA, clientes de API externa, etc.).
+## 5. Modelo de Domínio
+O núcleo da aplicação é definido por **6 entidades principais**:
 
-# 4. Stack de Tecnologia
-- **Linguagem/Framework:** Java 17+ / Spring Boot 3+
-- **Banco de Dados:**
-  - Desenvolvimento/Testes: H2 (em memória).
-  - Produção: PostgreSQL.
-- **Persistência:** Spring Data JPA / Hibernate.
-- **Segurança:** Spring Security (autenticação via JWT).
-- **Documentação da API:** Springdoc OpenAPI (Swagger).
-- **Build Tool:** Maven ou Gradle.
+- **User**: Representa o cliente da plataforma.
+- **Portfolio**: A carteira de investimentos do usuário (saldo e posições).
+- **Asset**: O catálogo de ativos negociáveis (ex: PETR4).
+- **Position**: Registro da posse de um ativo por um usuário (ex: "100 unidades de PETR4").
+- **Order**: Intenção de compra ou venda de um ativo.
+- **Transaction**: Registro histórico de uma ordem executada.
 
-# 5. Considerações de Segurança
-- **Dados Pessoais (PII):** Campos como cpf devem ser obrigatoriamente armazenados de forma criptografada no banco de dados.
-  - *Implementação Proposta:* Utilizar um JPA @AttributeConverter para criptografia/decriptografia transparente.
-- **Senhas:** Devem ser armazenadas utilizando um algoritmo de hashing forte (ex: BCrypt).
-- **Comunicação:** A API deve ser exposta exclusivamente via HTTPS em produção (TLS).
+---
+
+## 6. Contrato da API (v1.0)
+
+### Registro de Usuário
+| Método | Endpoint                | Descrição                             |
+|--------|-------------------------|---------------------------------------|
+| POST   | `/api/v1/auth/register` | Registra um novo usuário na plataforma |
+
+#### Corpo da Requisição (`RegisterUserRequestDTO`)
+```json
+{
+  "name": "Nome Completo",
+  "email": "email@valido.com",
+  "password": "senhaComPeloMenos8Caracteres",
+  "cpf": "123.456.789-00"
+}
+```
+#### Resposta de Sucesso (201 Created - AuthResponseDTO)
+```json
+{
+"userId": 1,
+"name": "Nome Completo",
+"token": "token-simulado-para-ambiente-dev"
+}
+```
+
+---
+
+## 7. Fluxo Principal: Registro de Usuário
+O fluxo de registro demonstra a arquitetura em ação:
+
+1. **AuthController** recebe o DTO e o valida (incluindo a validação customizada `@CPF`).
+2. Chama o **RegisterUserUseCase**.
+3. O **UserService** orquestra a lógica:
+    - Verifica via `UserRepositoryPort` se o e-mail/CPF já existem.
+    - Criptografa a senha com `PasswordEncoder`.
+    - Cria as entidades `User` e `Portfolio`.
+    - Salva o `User` (o `Portfolio` é salvo em cascata).
+    - Chama o `TokenProviderPort` para gerar um token.
+    - Retorna o `AuthResponseDTO`.
+4. O **GlobalExceptionHandler** captura exceções de negócio (ex: `UserAlreadyExistsException`) ou de validação, traduzindo em respostas HTTP **4xx padronizadas**.
+
+---
+
+## 8. Estratégia de Testes
+A abordagem de testes é feita em múltiplas camadas:
+
+### 🔹 Testes de Unidade
+- Foco na lógica de negócio dentro dos Services.
+- Executados em isolamento total com **JUnit 5 + Mockito**.
+
+### 🔹 Testes de Integração Web
+- Validação dos Controllers e contrato da API.
+- Utiliza `@WebMvcTest`, simulando requisições HTTP reais e validando as respostas.  
+
+
+
