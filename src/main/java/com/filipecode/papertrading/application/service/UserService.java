@@ -5,6 +5,7 @@ import com.filipecode.papertrading.domain.exception.CpfAlreadyExistsException;
 import com.filipecode.papertrading.domain.exception.UserAlreadyExistsException;
 import com.filipecode.papertrading.domain.model.user.Portfolio;
 import com.filipecode.papertrading.domain.model.user.User;
+import com.filipecode.papertrading.domain.model.user.UserRole;
 import com.filipecode.papertrading.domain.repository.UserRepositoryPort;
 import com.filipecode.papertrading.domain.service.TokenProviderPort;
 import com.filipecode.papertrading.infrastructure.web.dto.AuthResponseDTO;
@@ -42,6 +43,7 @@ public class UserService implements RegisterUserUseCase {
         newUser.setEmail(requestData.email());
         newUser.setPassword(encryptedPassword);
         newUser.setCpf(requestData.cpf());
+        newUser.setRole(UserRole.valueOf("USER"));
 
         Portfolio portfolio = new Portfolio();
         portfolio.setBalance(new BigDecimal("100000.00"));
