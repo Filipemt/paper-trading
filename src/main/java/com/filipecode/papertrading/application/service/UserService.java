@@ -1,5 +1,6 @@
 package com.filipecode.papertrading.application.service;
 
+import com.filipecode.papertrading.application.usecase.LoginUserUseCase;
 import com.filipecode.papertrading.application.usecase.RegisterUserUseCase;
 import com.filipecode.papertrading.domain.exception.CpfAlreadyExistsException;
 import com.filipecode.papertrading.domain.exception.UserAlreadyExistsException;
@@ -9,22 +10,27 @@ import com.filipecode.papertrading.domain.model.user.UserRole;
 import com.filipecode.papertrading.domain.repository.UserRepositoryPort;
 import com.filipecode.papertrading.domain.service.TokenProviderPort;
 import com.filipecode.papertrading.infrastructure.web.dto.AuthResponseDTO;
+import com.filipecode.papertrading.infrastructure.web.dto.LoginUserRequestDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.RegisterUserRequestDTO;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 
 @Service
-public class UserService implements RegisterUserUseCase {
+public class UserService implements RegisterUserUseCase, LoginUserUseCase {
     private final UserRepositoryPort userRepositoryPort;
     private final TokenProviderPort tokenProviderPort;
 
+    private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepositoryPort userRepositoryPort, TokenProviderPort tokenProviderPort, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepositoryPort userRepositoryPort, TokenProviderPort tokenProviderPort, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
         this.userRepositoryPort = userRepositoryPort;
         this.tokenProviderPort = tokenProviderPort;
+        this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -57,6 +63,23 @@ public class UserService implements RegisterUserUseCase {
         return new AuthResponseDTO(
                 savedUser.getId(),
                 savedUser.getName(),
+                token
+        );
+    }
+
+    @Override
+    public AuthResponseDTO login(LoginUserRequestDTO requestData) {
+        var usernamePassword = new UsernamePasswordAuthenticationToken(requestData.email(), requestData.password());
+
+        var auth = this.authenticationManager.authenticate(usernamePassword);
+
+        var user = (User) auth.getPrincipal();
+
+        String token = tokenProviderPort.generateToken(user);
+
+        return new AuthResponseDTO(
+                user.getId(),
+                user.getName(),
                 token
         );
     }
