@@ -1,5 +1,6 @@
 package com.filipecode.papertrading.infrastructure.web.exception;
 
+import com.filipecode.papertrading.domain.exception.AssetNotFoundException;
 import com.filipecode.papertrading.domain.exception.CpfAlreadyExistsException;
 import com.filipecode.papertrading.domain.exception.UserAlreadyExistsException;
 import com.filipecode.papertrading.infrastructure.web.dto.ErrorResponseDTO;
@@ -20,6 +21,19 @@ import java.util.Map;
 public class GlobalExeptionHandler {
 
     private static final String GENERIC_CONFLICT_MESSAGE = "E-mail ou CPF já está cadastrado. Por favor, verifique os dados.";
+
+    @ExceptionHandler(AssetNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleAssetNotFound(AssetNotFoundException exception) {
+        log.warn("Ativo não encontrado. Causa: {}", exception.getMessage());
+
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.NOT_FOUND.value(),
+                exception.getMessage(),
+                java.time.LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ErrorResponseDTO> handleEmailAlreadyExists(UserAlreadyExistsException exception) {
