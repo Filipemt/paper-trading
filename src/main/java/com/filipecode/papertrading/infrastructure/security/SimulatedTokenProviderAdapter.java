@@ -5,7 +5,7 @@ import com.filipecode.papertrading.domain.service.TokenProviderPort;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-//@Component
+@Component
 @Profile("dev")
 public class SimulatedTokenProviderAdapter implements TokenProviderPort {
     @Override

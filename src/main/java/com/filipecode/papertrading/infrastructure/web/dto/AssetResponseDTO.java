@@ -2,10 +2,12 @@ package com.filipecode.papertrading.infrastructure.web.dto;
 
 import com.filipecode.papertrading.domain.model.asset.AssetType;
 
+import java.math.BigDecimal;
+
 public record AssetResponseDTO(
-        Long id,
         String ticker,
         String companyName,
-        AssetType type
+        AssetType type,
+        BigDecimal price
 ) {
 }
