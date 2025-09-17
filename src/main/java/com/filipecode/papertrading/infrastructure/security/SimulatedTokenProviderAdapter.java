@@ -8,13 +8,23 @@ import org.springframework.stereotype.Component;
 @Component
 @Profile("dev")
 public class SimulatedTokenProviderAdapter implements TokenProviderPort {
+
+    private static final String FAKE_TOKEN_PREFIX = "fake-token-for-email:";
+
     @Override
     public String generateToken(User user) {
-        return "fake-jwt-token-for-user-id" + user.getId();
+        if (user == null || user.getEmail() == null) {
+            throw new IllegalArgumentException("User e e-mail não podem ser nulos.");
+        }
+        return FAKE_TOKEN_PREFIX + user.getEmail();
     }
 
     @Override
     public String validateToken(String token) {
-        return "";
+        if (token != null && token.startsWith(FAKE_TOKEN_PREFIX)) {
+            return token.substring(FAKE_TOKEN_PREFIX.length());
+        }
+
+        return null;
     }
 }
