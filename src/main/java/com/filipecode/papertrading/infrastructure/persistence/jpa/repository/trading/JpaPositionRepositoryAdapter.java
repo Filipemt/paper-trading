@@ -4,9 +4,11 @@ import com.filipecode.papertrading.domain.model.asset.Asset;
 import com.filipecode.papertrading.domain.model.trading.Position;
 import com.filipecode.papertrading.domain.model.user.Portfolio;
 import com.filipecode.papertrading.domain.repository.PositionRepositoryPort;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+@Repository
 public class JpaPositionRepositoryAdapter implements PositionRepositoryPort {
     private final JpaPositionRepository jpaRepository;
 

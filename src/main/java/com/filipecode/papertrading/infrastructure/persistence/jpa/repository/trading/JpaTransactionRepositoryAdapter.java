@@ -4,11 +4,13 @@ import com.filipecode.papertrading.domain.model.trading.OrderType;
 import com.filipecode.papertrading.domain.model.trading.Transaction;
 import com.filipecode.papertrading.domain.model.user.Portfolio;
 import com.filipecode.papertrading.domain.repository.TransactionRepositoryPort;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public class JpaTransactionRepositoryAdapter implements TransactionRepositoryPort {
     private final JpaTransactionRepository jpaRepository;
 
