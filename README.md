@@ -1,156 +1,202 @@
-# Paper Trading API
+# Especificação Técnica: Simulador de Carteira de Ações v3.0 (Atualizado)
 
-API RESTful para uma plataforma de simulação de investimentos (Paper Trading), construída com Java, Spring Boot e princípios de Arquitetura Limpa.
-
----
-
-## 1. Visão Geral do Projeto
-O objetivo deste projeto é desenvolver um sistema de "Paper Trading" robusto e escalável.  
-A aplicação permitirá que usuários se cadastrem, gerenciem uma carteira de investimentos virtual com um saldo inicial, e simulem a compra e venda de ativos financeiros (ações, FIIs) com base em cotações de mercado.
-
-Este projeto serve como um estudo de caso prático na aplicação de padrões de arquitetura de software modernos em um ambiente backend.
+**Para:** Desenvolvedor Java  
+**De:** Tech Lead  
+**Assunto:** Guia completo e atualizado para implementação.
 
 ---
 
-## 2. Arquitetura
-A aplicação é construída seguindo os princípios da **Arquitetura Hexagonal (Portas e Adaptadores)** para garantir um núcleo de negócio desacoplado, testável e independente de tecnologias externas (web, banco de dados).
-
-### Princípio Central
-A regra fundamental é a **Regra da Dependência**, que estabelece que todas as dependências do código-fonte devem apontar para "dentro", em direção ao núcleo do negócio.
-- A camada de **infraestrutura** depende da camada de **aplicação**.
-- A camada de **aplicação** depende da camada de **domínio**.
-- O **domínio** não conhece ninguém.
-
-### Estrutura de Pacotes
-```text
-com.filipecode.papertrading
-├── PaperTradingApplication.java  # Raiz do Component Scan
-│
-├── domain                        # O NÚCLEO: Regras de negócio puras
-│   ├── model                     # Entidades e Objetos de Valor (ex: User, Order)
-│   ├── repository                # PORTAS de saída (Interfaces de persistência)
-│   ├── service                   # PORTAS de saída (Serviços externos, ex: PriceProviderPort)
-│   └── exception                 # Exceções de negócio customizadas
-│
-├── application                   # O CÉREBRO: Orquestração dos casos de uso
-│   ├── usecase                   # PORTAS de entrada (Interfaces, ex: RegisterUserUseCase)
-│   └── service                   # Implementações dos casos de uso (ex: UserService)
-│
-└── infrastructure                # A CASCA: Detalhes de tecnologia (Spring, JPA, Web, etc.)
-    ├── web                       # ADAPTADORES de entrada (Controllers, DTOs, Exception Handlers)
-    ├── persistence               # ADAPTADORES de saída (JPA Repositories)
-    ├── client                    # ADAPTADORES de saída (APIs externas)
-    ├── config                    # Configurações do Spring (@Configuration, Beans)
-    └── security                  # Implementações de segurança (JWT, Filters)
-```
----
-
-## 3. Stack de Tecnologias
-- **Linguagem & Framework**: Java 17+, Spring Boot 3+
-- **Segurança**: Spring Security
-- **Persistência**: Spring Data JPA, Hibernate
-- **Banco de Dados**:
-    - Desenvolvimento: H2 (modo arquivo)
-    - Produção: PostgreSQL
-- **Migrações**: Flyway
-- **Testes**: JUnit 5, Mockito, Spring Boot Test
-- **Build Tool**: Maven
+## 1. Visão Geral
+Construir uma API RESTful para um sistema de *Paper Trading*, permitindo que usuários se cadastrem, autentiquem, gerenciem uma carteira virtual e simulem operações de mercado.  
+O foco da **v1.0** é a funcionalidade principal do usuário.
 
 ---
 
-## 4. Como Executar o Projeto Localmente
+## 2. Modelo de Dados (@Entity)
 
-### Pré-requisitos
-- Java (JDK) 17 ou superior
-- Apache Maven 3.8+
+A camada de domínio é composta pelas seguintes entidades, implementadas com JPA.
 
-### Passos
-1. Clone o repositório.
-2. Abra um terminal na raiz do projeto.
-3. Execute o build com o Maven:
-   ```bash
-   mvn clean install
-4. Rode a aplicação
-   ```bash
-    java -jar target/paper-trading-api-0.0.1-SNAPSHOT.jar
-5. A API estará disponível em: http://localhost:8080
-
-### Banco de Dados de Desenvolvimento (H2
-Console: http://localhost:8080/h2-console
-
-JDBC URL: jdbc:h2:file:./target/papertradingdb
-
-User Name: sa
-
-Password: (vazio)
+| Entidade   | Atributos Chave                             | Relacionamentos Principais                                                                 | Notas                                                                 |
+|------------|---------------------------------------------|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| **User**   | id, name, email, password, cpf, timestamps  | `@OneToOne(mappedBy="user")` com **Portfolio**                                             | Contém a identidade do usuário. `email` e `cpf` são únicos. Implementa `UserDetails`. |
+| **Portfolio** | id, balance                              | `@OneToOne` com **User**, `@OneToMany` com **Position**, **Order**, **Transaction**        | O "container" dos ativos e do saldo de um usuário.                   |
+| **Asset**  | id, ticker, companyName, type               | Nenhum (relações unidirecionais a partir de outras entidades)                              | Catálogo de ativos negociáveis. `ticker` é único.                    |
+| **Position** | id, quantity, averagePrice                | `@ManyToOne` com **Portfolio**, `@ManyToOne` com **Asset**                                | Registro consolidado da posse de um **Asset**.                       |
+| **Order**  | id, quantity, price, type, marketOrderType, status, timestamps | `@ManyToOne` com **Portfolio**, `@ManyToOne` com **Asset**, `@OneToOne(mappedBy="order")` com **Transaction** | Representa uma intenção de compra ou venda. |
+| **Transaction** | id, quantity, price, timestamp         | `@ManyToOne` com **Portfolio**, `@ManyToOne` com **Asset**, `@OneToOne` com **Order**      | Registro histórico e imutável de uma ordem executada.                |
 
 ---
 
-## 5. Modelo de Domínio
-O núcleo da aplicação é definido por **6 entidades principais**:
+## 3. Arquitetura da Camada de Aplicação
 
-- **User**: Representa o cliente da plataforma.
-- **Portfolio**: A carteira de investimentos do usuário (saldo e posições).
-- **Asset**: O catálogo de ativos negociáveis (ex: PETR4).
-- **Position**: Registro da posse de um ativo por um usuário (ex: "100 unidades de PETR4").
-- **Order**: Intenção de compra ou venda de um ativo.
-- **Transaction**: Registro histórico de uma ordem executada.
+Adotamos o padrão de **Casos de Uso (Use Cases)** para definir os contratos da lógica de negócio, com dois princípios:
+
+1. **Interfaces Granulares**: Uma interface `UseCase` para cada ação de negócio, especialmente para **Comandos** (operações que alteram dados).
+2. **Implementações Coesas**: Uma única classe `Service` por conceito de negócio (**Auth, Asset, Portfolio, Order**), que implementa as várias interfaces `UseCase` relacionadas.
 
 ---
 
-## 6. Contrato da API (v1.0)
+## 4. Casos de Uso e Regras de Negócio (UC)
 
-### Registro de Usuário
-| Método | Endpoint                | Descrição                             |
-|--------|-------------------------|---------------------------------------|
-| POST   | `/api/v1/auth/register` | Registra um novo usuário na plataforma |
+### UC-01: Registro de Novo Usuário (`RegisterUserUseCase`)
+**Descrição:** Um novo usuário deve poder se registrar.
 
-#### Corpo da Requisição (`RegisterUserRequestDTO`)
-```json
-{
-  "name": "Nome Completo",
-  "email": "email@valido.com",
-  "password": "senhaComPeloMenos8Caracteres",
-  "cpf": "123.456.789-00"
-}
-```
-#### Resposta de Sucesso (201 Created - AuthResponseDTO)
-```json
-{
-"userId": 1,
-"name": "Nome Completo",
-"token": "token-simulado-para-ambiente-dev"
-}
-```
+**Regras de Negócio:**
+- **[RN-01]** `email` e `cpf` devem ser únicos. Se duplicado, lançar exceção (`UserAlreadyExistsException`, `CpfAlreadyExistsException`).
+- **[RN-02]** A senha deve ser armazenada com hash `BCrypt`.
+- **[RN-03]** Um `Portfolio` com saldo inicial de **100.000,00** deve ser criado em cascata.
+- **[RN-04]** Após o registro, um token **JWT** deve ser gerado e retornado, autenticando o usuário automaticamente.
 
 ---
 
-## 7. Fluxo Principal: Registro de Usuário
-O fluxo de registro demonstra a arquitetura em ação:
+### UC-02: Autenticação de Usuário (`AuthenticateUserUseCase`)
+**Descrição:** Um usuário registrado deve poder fazer login.
 
-1. **AuthController** recebe o DTO e o valida (incluindo a validação customizada `@CPF`).
-2. Chama o **RegisterUserUseCase**.
-3. O **UserService** orquestra a lógica:
-    - Verifica via `UserRepositoryPort` se o e-mail/CPF já existem.
-    - Criptografa a senha com `PasswordEncoder`.
-    - Cria as entidades `User` e `Portfolio`.
-    - Salva o `User` (o `Portfolio` é salvo em cascata).
-    - Chama o `TokenProviderPort` para gerar um token.
-    - Retorna o `AuthResponseDTO`.
-4. O **GlobalExceptionHandler** captura exceções de negócio (ex: `UserAlreadyExistsException`) ou de validação, traduzindo em respostas HTTP **4xx padronizadas**.
+**Regras de Negócio:**
+- **[RN-05]** As credenciais devem ser validadas pelo `AuthenticationManager` do **Spring Security**.
+- **[RN-06]** Em caso de falha, retornar **401 Unauthorized** com mensagem genérica.
+- **[RN-07]** Em caso de sucesso, gerar e retornar novo token **JWT**.
 
 ---
 
-## 8. Estratégia de Testes
-A abordagem de testes é feita em múltiplas camadas:
+### UC-03: Listar Ativos Disponíveis (`ListAssetsUseCase`)
+**Descrição:** Um usuário autenticado deve poder ver a lista de ativos disponíveis para negociação.
 
-### 🔹 Testes de Unidade
-- Foco na lógica de negócio dentro dos Services.
-- Executados em isolamento total com **JUnit 5 + Mockito**.
+**Regras de Negócio:**
+- **[RN-08]** Buscar os **Assets** do banco de dados de forma **paginada**.
+- **[RN-09]** Para cada Asset, o preço atualizado deve ser buscado via `PriceProviderPort`.
+- **[RN-10]** A resposta deve ser um `Page<AssetResponseDTO>` combinando os dados.
 
-### 🔹 Testes de Integração Web
-- Validação dos Controllers e contrato da API.
-- Utiliza `@WebMvcTest`, simulando requisições HTTP reais e validando as respostas.  
+---
 
+### UC-04: Buscar Ativo por Ticker (`FindAssetByTickerUseCase`)
+**Descrição:** Um usuário autenticado deve poder ver os detalhes de um ativo específico.
 
+**Regras de Negócio:**
+- **[RN-11]** Se o ticker não for encontrado, lançar `AssetNotFoundException`.
+- **[RN-12]** A resposta deve ser um `AssetResponseDTO` enriquecido com o preço atual.
 
+---
+
+### UC-05: Consultar Carteira (`ViewPortfolioUseCase`)
+**Descrição:** Um usuário autenticado deve poder visualizar o estado completo de sua carteira.
+
+**Regras de Negócio:**
+- **[RN-13]** Buscar o **Portfolio** do usuário autenticado via `SecurityContextHolder`.
+- **[RN-14]** Para cada **Position**, buscar o preço atual via `PriceProviderPort`.
+- **[RN-15]** Calcular o valor total de cada posição, o valor total em ativos e o patrimônio total.
+- **[RN-16]** Retornar `PortfolioResponseDTO` contendo todos os cálculos e lista de `PositionResponseDTO`.
+
+**Nota:** Os UCs de **Order** e **Transaction** serão detalhados no **BLOCO 4**.
+
+---
+
+### UC-06: Criação de Ordem de Compra/Venda (`CreateOrderUseCase`)
+
+**Descrição:**  
+Um usuário autenticado deve poder submeter uma ordem de compra ou venda de um ativo.
+
+### Fluxo Principal (Lógica do Serviço):
+1. Receber dados da ordem via DTO (`ticker`, `quantity`, `type`, `orderType`, `price` se for LIMIT).
+2. Validar os dados de entrada (`@Valid` no DTO).
+3. Buscar o **User** autenticado do `SecurityContextHolder`.
+4. Buscar o **Asset** pelo `ticker`. Se não existir, lançar `AssetNotFoundException`.
+5. Buscar o **Portfolio** do usuário. Se não existir, lançar `PortfolioNotFoundException`.
+6. **Se a ordem for de COMPRA (BUY):**  
+   a. Obter o preço atual do ativo via `PriceProviderPort`.  
+   b. Calcular o custo total (`preço * quantidade`).  
+   c. Validar se o `balance` do Portfolio é suficiente. Se não, lançar `InsufficientFundsException`.
+7. **Se a ordem for de VENDA (SELL):**  
+   a. Buscar a **Position** do usuário para aquele **Asset**.  
+   b. Validar se a `quantity` na Position é suficiente. Se não, lançar `InsufficientPositionException`.
+8. Criar a entidade **Order** com status `PENDING` (para LIMIT) ou `EXECUTED` (para MARKET).
+9. Salvar a **Order**.
+10. **Se a ordem for EXECUTED:**  
+    a. Criar e salvar a **Transaction** correspondente, ligada à Order.  
+    b. Chamar o **PortfolioService** para executar a lógica de atualização da carteira (debitar/creditar `balance` e atualizar a **Position**).
+
+### Regras de Negócio e Validações Adicionais:
+- **[RN-17]** A `quantity` da ordem deve ser um inteiro positivo.
+- **[RN-18]** O custo de uma ordem de compra não pode ser maior que o `balance` do Portfolio.
+- **[RN-19]** A quantidade de uma ordem de venda não pode ser maior que a `quantity` da Position correspondente.
+- **[RN-20]** A atualização do `balance` e da `Position` após uma transação deve ser matematicamente precisa (ex: recálculo do preço médio na compra).
+- **[RN-21]** Toda a operação de execução de uma ordem de mercado deve ser atômica (`@Transactional`).
+
+---
+
+### UC-07: Cancelamento de Ordem (`CancelOrderUseCase`)
+
+**Descrição:**  
+Um usuário autenticado deve poder cancelar uma ordem que ainda não foi executada.
+
+### Fluxo Principal (Lógica do Serviço):
+1. Receber o `orderId` e o **User** autenticado.
+2. Buscar a **Order** pelo id e pelo **Portfolio** do usuário (garantia de segurança).
+    - Se não encontrar, lançar `OrderNotFoundException`.
+3. Verificar se o `status` da ordem é `PENDING`.
+4. Se for, alterar o `status` para `CANCELLED`.
+5. Salvar a **Order** atualizada.
+
+### Regras de Negócio e Validações Adicionais:
+- **[RN-22]** Apenas ordens com `status = PENDING` podem ser canceladas.
+    - Se o status for outro, lançar `OrderCannotBeCancelledException`.
+
+---
+
+### UC-08: Listar Ordens do Usuário (`ListOrdersUseCase`)
+
+**Descrição:**  
+Um usuário autenticado deve poder ver seu histórico de ordens.
+
+### Regras de Negócio:
+- **[RN-23]** O serviço deve buscar todas as **Orders** associadas ao **Portfolio** do usuário autenticado.
+- **[RN-24]** A resposta deve ser **paginada** e permitir filtros (ex: por `status`, `type`, período).
+
+---
+
+### UC-09: Listar Transações do Usuário (`ListTransactionsUseCase`)
+
+**Descrição:**  
+Um usuário autenticado deve poder ver seu extrato de transações executadas.
+
+### Regras de Negócio:
+- **[RN-25]** O serviço deve buscar todas as **Transactions** associadas ao **Portfolio** do usuário autenticado.
+- **[RN-26]** A resposta deve ser **paginada** e ordenada da mais recente para a mais antiga.
+
+---
+
+## 5. Ordem de Implementação
+
+### BLOCO 0: FUNDAÇÃO (✅ 100% Concluído)
+- Estrutura do projeto, `pom.xml`, configuração de perfis (dev/prod).
+- Implementação completa de todas as Entidades do domínio.
+- Configuração do **Flyway** com a migração V1 e script de dados de teste V2.
+- Implementação completa da camada de **Repositórios (Ports e Adapters)**.
+
+---
+
+### BLOCO 1: AUTENTICAÇÃO E SEGURANÇA (✅ 100% Concluído)
+- Implementação e testes do `RegisterUserUseCase` e `AuthenticateUserUseCase`.
+- Implementação do `JwtTokenProvider` (real e simulado), `JwtAuthenticationFilter`, `UserDetailsService` e `SecurityConfig` (real e dev).
+- Validação de entrada com `@Valid` e anotações customizadas (`@CPF`).
+- Tratamento de exceções com `GlobalExceptionHandler`.
+
+---
+
+### BLOCO 2: VISUALIZAÇÃO DE MERCADO (✅ 100% Concluído)
+- Implementação e testes do `ListAssetsUseCase` e `FindAssetByTickerUseCase`.
+- Implementação do `AssetController` para expor os endpoints.
+
+---
+
+### BLOCO 3: GESTÃO DE CARTEIRA 
+-  Projetar e implementar `ViewPortfolioUseCase` no `PortfolioService`.
+- [A FAZER] Escrever os testes de unidade para o `PortfolioService`.
+- Criar o `PortfolioController` para expor o endpoint `GET /portfolios/me`.
+- [A FAZER] Escrever o teste de integração web para o `PortfolioController`.
+
+---
+
+### BLOCO 4: OPERAÇÕES DE NEGÓCIO 
+- [A FAZER] Projetar e implementar `CreateOrderUseCase` e `CancelOrderUseCase`.
+- [A FAZER] Criar `OrderController` e seus testes.  
