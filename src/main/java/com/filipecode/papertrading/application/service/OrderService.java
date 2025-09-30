@@ -23,7 +23,6 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class OrderService implements CreateOrderUseCase {
 
     private final AssetRepositoryPort assetRepositoryPort;
@@ -32,6 +31,16 @@ public class OrderService implements CreateOrderUseCase {
     private final OrderRepositoryPort orderRepositoryPort;
     private final TransactionRepositoryPort transactionRepositoryPort;
     private final PositionRepositoryPort positionRepositoryPort;
+
+    public OrderService(AssetRepositoryPort assetRepositoryPort, PortfolioRepositoryPort portfolioRepositoryPort, PriceProviderPort priceProviderPort, OrderRepositoryPort orderRepositoryPort, TransactionRepositoryPort transactionRepositoryPort, PositionRepositoryPort positionRepositoryPort) {
+        this.assetRepositoryPort = assetRepositoryPort;
+        this.portfolioRepositoryPort = portfolioRepositoryPort;
+        this.priceProviderPort = priceProviderPort;
+        this.orderRepositoryPort = orderRepositoryPort;
+        this.transactionRepositoryPort = transactionRepositoryPort;
+        this.positionRepositoryPort = positionRepositoryPort;
+    }
+
     @Override
     @Transactional
     public CreateOrderResponseDTO createOrder(CreateOrderRequestDTO dto) {
