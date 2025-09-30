@@ -44,7 +44,6 @@ public class OrderService implements CreateOrderUseCase {
 
         Portfolio portfolio = portfolioRepositoryPort.findByUser(user)
                 .orElseThrow(() -> new PortfolioNotFoundException("Portfólio não encontrado"));
-                // Todo: Tratar exceção no GlobalExceptionHandler
 
 
         if (dto.type() == OrderType.BUY) {
@@ -53,7 +52,6 @@ public class OrderService implements CreateOrderUseCase {
 
             if (totalValue.compareTo(portfolio.getBalance()) > 0) {
                 throw new InsufficientFundsException("Saldo insuficiente!");
-                // Todo: Tratar exceção no GlobalExceptionHandler
             }
 
             Order newOrder = Order.builder()
