@@ -99,6 +99,32 @@ public class GlobalExeptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(InsufficientFundsException.class)
+    public ResponseEntity<ErrorResponseDTO> handleInsufficientFundsException(InsufficientFundsException exception) {
+        log.warn("Falha no processamento da transação de um ativo. Causa: {}", exception.getMessage());
+
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.UNPROCESSABLE_ENTITY.value(),
+                "Saldo insuficiente para a transação.",
+                java.time.LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    @ExceptionHandler(PositionNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handlePositionNotFoundException(PositionNotFoundException exception) {
+        log.warn("Falha na busca de uma posição. Causa: {}", exception.getMessage());
+
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.NOT_FOUND.value(),
+                "Posição não encontrada.",
+                java.time.LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
     /**
      * Handler específico para erros de validação da anotação @Valid.
      * Retorna um status 400 Bad Request com um corpo JSON detalhando

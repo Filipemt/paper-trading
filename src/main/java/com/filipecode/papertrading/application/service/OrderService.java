@@ -165,7 +165,7 @@ public class OrderService implements CreateOrderUseCase {
         throw new IllegalStateException("Tipo de ordem não suportada!");
 
     }
-
+//
 //    private CreateOrderResponseDTO processLimitOrder(CreateOrderRequestDTO dto, Asset asset, Portfolio portfolio) {
 //
 //    }
