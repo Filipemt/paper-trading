@@ -1,9 +1,4 @@
 # Especificação Técnica: Simulador de Carteira de Ações v3.0 (Atualizado)
-
-**Para:** Desenvolvedor Java  
-**De:** Tech Lead  
-**Assunto:** Guia completo e atualizado para implementação.
-
 ---
 
 ## 1. Visão Geral
@@ -164,39 +159,3 @@ Um usuário autenticado deve poder ver seu extrato de transações executadas.
 - **[RN-26]** A resposta deve ser **paginada** e ordenada da mais recente para a mais antiga.
 
 ---
-
-## 5. Ordem de Implementação
-
-### BLOCO 0: FUNDAÇÃO (✅ 100% Concluído)
-- Estrutura do projeto, `pom.xml`, configuração de perfis (dev/prod).
-- Implementação completa de todas as Entidades do domínio.
-- Configuração do **Flyway** com a migração V1 e script de dados de teste V2.
-- Implementação completa da camada de **Repositórios (Ports e Adapters)**.
-
----
-
-### BLOCO 1: AUTENTICAÇÃO E SEGURANÇA (✅ 100% Concluído)
-- Implementação e testes do `RegisterUserUseCase` e `AuthenticateUserUseCase`.
-- Implementação do `JwtTokenProvider` (real e simulado), `JwtAuthenticationFilter`, `UserDetailsService` e `SecurityConfig` (real e dev).
-- Validação de entrada com `@Valid` e anotações customizadas (`@CPF`).
-- Tratamento de exceções com `GlobalExceptionHandler`.
-
----
-
-### BLOCO 2: VISUALIZAÇÃO DE MERCADO (✅ 100% Concluído)
-- Implementação e testes do `ListAssetsUseCase` e `FindAssetByTickerUseCase`.
-- Implementação do `AssetController` para expor os endpoints.
-
----
-
-### BLOCO 3: GESTÃO DE CARTEIRA 
--  Projetar e implementar `ViewPortfolioUseCase` no `PortfolioService`.
-- [A FAZER] Escrever os testes de unidade para o `PortfolioService`.
-- Criar o `PortfolioController` para expor o endpoint `GET /portfolios/me`.
-- [A FAZER] Escrever o teste de integração web para o `PortfolioController`.
-
----
-
-### BLOCO 4: OPERAÇÕES DE NEGÓCIO 
-- [A FAZER] Projetar e implementar `CreateOrderUseCase` e `CancelOrderUseCase`.
-- [A FAZER] Criar `OrderController` e seus testes.  
