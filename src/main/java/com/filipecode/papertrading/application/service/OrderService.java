@@ -1,9 +1,7 @@
 package com.filipecode.papertrading.application.service;
 
 import com.filipecode.papertrading.application.usecase.CreateOrderUseCase;
-import com.filipecode.papertrading.domain.exception.AssetNotFoundException;
-import com.filipecode.papertrading.domain.exception.InsufficientFundsException;
-import com.filipecode.papertrading.domain.exception.PortfolioNotFoundException;
+import com.filipecode.papertrading.domain.exception.*;
 import com.filipecode.papertrading.domain.model.asset.Asset;
 import com.filipecode.papertrading.domain.model.trading.*;
 import com.filipecode.papertrading.domain.model.user.Portfolio;
@@ -48,26 +46,129 @@ public class OrderService implements CreateOrderUseCase {
         Asset asset = findAssetByTicker(dto.ticker());
         Portfolio portfolio = findPortfolioByUser(user);
 
-        if (dto.type() == OrderType.BUY) {
-            return handleBuyOrder(dto, user, asset, portfolio);
-        } else if (dto.type() == OrderType.SELL) {
-            // Lógica de SELL
-            throw new UnsupportedOperationException("Lógica de venda ainda não implementada.");
+        if (dto.orderType() == MarketOrderType.MARKET) {
+            return processMarketOrder(dto, asset, portfolio);
+        } else if (dto.orderType() == MarketOrderType.LIMIT) {
+//            return processLimitOrder(dto, asset, portfolio);
         }
 
         throw new IllegalStateException("Tipo de ordem não suportado: " + dto.type());
     }
 
-    private CreateOrderResponseDTO handleBuyOrder(CreateOrderRequestDTO dto, User user, Asset asset, Portfolio portfolio) {
+
+    private CreateOrderResponseDTO processMarketOrder(CreateOrderRequestDTO dto, Asset asset, Portfolio portfolio) {
         BigDecimal currentPrice = priceProviderPort.getCurrentPrice(asset.getTicker());
         BigDecimal totalValue = currentPrice.multiply(BigDecimal.valueOf(dto.quantity()));
 
-        executeBuyValidation(portfolio, totalValue);
-        Order savedOrder = persistOrderAndTransaction(portfolio, asset, dto, currentPrice);
-        updatePortfolioStateForBuy(portfolio, totalValue, dto.quantity(), currentPrice);
+        if (dto.type() == OrderType.BUY) {
+            if (totalValue.compareTo(portfolio.getBalance()) > 0) {
+                throw new InsufficientFundsException("Saldo insuficiente para realizar a compra.");
+            }
 
-        return mapToOrderResponseDTO(savedOrder);
+            Order newOrder = Order.builder()
+                    .portfolio(portfolio)
+                    .asset(asset)
+                    .quantity(dto.quantity())
+                    .price(currentPrice)
+                    .type(dto.type())
+                    .marketOrderType(dto.orderType())
+                    .status(OrderStatus.EXECUTED)
+                    .build();
+            Order savedOrder = orderRepositoryPort.save(newOrder);
+
+            Transaction newTransaction = Transaction.builder()
+                    .quantity(savedOrder.getQuantity())
+                    .price(savedOrder.getPrice())
+                    .type(savedOrder.getType())
+                    .timestamp(LocalDateTime.now())
+                    .portfolio(savedOrder.getPortfolio())
+                    .asset(savedOrder.getAsset())
+                    .order(savedOrder)
+                    .build();
+            transactionRepositoryPort.save(newTransaction);
+
+            portfolio.setBalance(portfolio.getBalance().subtract(totalValue));
+
+            Optional<Position> existingPositionOptional = positionRepositoryPort.findByPortfolioAndAsset(portfolio, asset);
+
+            if (existingPositionOptional.isEmpty()) {
+                Position newPosition = new Position();
+                newPosition.setPortfolio(portfolio);
+                newPosition.setAsset(asset);
+                newPosition.setQuantity(dto.quantity());
+                newPosition.setAveragePrice(currentPrice);
+                portfolio.getPositions().add(newPosition);
+            }
+            else {
+                Position existingPosition = existingPositionOptional.get();
+
+                BigDecimal oldTotalValue = existingPosition.getAveragePrice().multiply(BigDecimal.valueOf(existingPosition.getQuantity()));
+                BigDecimal purchaseTotalValue = currentPrice.multiply(BigDecimal.valueOf(dto.quantity()));
+
+                int newTotalQuantity = existingPosition.getQuantity() + dto.quantity();
+                BigDecimal newAveragePrice = (oldTotalValue.add(purchaseTotalValue))
+                        .divide(BigDecimal.valueOf(newTotalQuantity), 2, RoundingMode.HALF_UP);
+
+                existingPosition.setQuantity(newTotalQuantity);
+                existingPosition.setAveragePrice(newAveragePrice);
+            }
+            portfolioRepositoryPort.save(portfolio);
+
+            return mapToOrderResponseDTO(savedOrder);
+        }
+
+        else if (dto.type() == OrderType.SELL) {
+            Position currentPosition = positionRepositoryPort.findByPortfolioAndAsset(portfolio, asset)
+                    .orElseThrow(() -> new PositionNotFoundException("Posição não encontrada."));
+
+            if (currentPosition.getQuantity() < dto.quantity()) {
+                throw new InsufficientPositionException("Quantidade de posições insuficiente.");
+            }
+
+            currentPrice = priceProviderPort.getCurrentPrice(asset.getTicker());
+            BigDecimal totalValueToReceive = currentPrice.multiply(BigDecimal.valueOf(dto.quantity()));
+
+            portfolio.setBalance(portfolio.getBalance().add(totalValueToReceive));
+            currentPosition.setQuantity(currentPosition.getQuantity() - dto.quantity());
+
+            Order newOrder = Order.builder()
+                    .portfolio(portfolio)
+                    .asset(asset)
+                    .quantity(dto.quantity())
+                    .price(currentPrice)
+                    .type(dto.type())
+                    .marketOrderType(dto.orderType())
+                    .status(OrderStatus.EXECUTED)
+                    .build();
+            Order savedOrder = orderRepositoryPort.save(newOrder);
+
+            Transaction newTransaction = Transaction.builder()
+                    .quantity(savedOrder.getQuantity())
+                    .price(savedOrder.getPrice())
+                    .type(savedOrder.getType())
+                    .timestamp(LocalDateTime.now())
+                    .portfolio(savedOrder.getPortfolio())
+                    .asset(savedOrder.getAsset())
+                    .order(savedOrder)
+                    .build();
+            transactionRepositoryPort.save(newTransaction);
+
+            if (currentPosition.getQuantity() == 0) {
+                portfolio.getPositions().remove(currentPosition);
+            }
+
+            portfolioRepositoryPort.save(portfolio);
+
+            return mapToOrderResponseDTO(savedOrder);
+        }
+
+        throw new IllegalStateException("Tipo de ordem não suportada!");
+
     }
+
+//    private CreateOrderResponseDTO processLimitOrder(CreateOrderRequestDTO dto, Asset asset, Portfolio portfolio) {
+//
+//    }
 
     private Asset findAssetByTicker(String ticker) {
         return assetRepositoryPort.findByTicker(ticker)
@@ -77,64 +178,6 @@ public class OrderService implements CreateOrderUseCase {
     private Portfolio findPortfolioByUser(User user) {
         return portfolioRepositoryPort.findByUser(user)
                 .orElseThrow(() -> new PortfolioNotFoundException("Portfólio não encontrado para o usuário."));
-    }
-
-    private void executeBuyValidation(Portfolio portfolio, BigDecimal totalValue) {
-        if (totalValue.compareTo(portfolio.getBalance()) > 0) {
-            throw new InsufficientFundsException("Saldo insuficiente para realizar a compra.");
-        }
-    }
-
-    private Order persistOrderAndTransaction(Portfolio portfolio, Asset asset, CreateOrderRequestDTO dto, BigDecimal executionPrice) {
-        Order newOrder = Order.builder()
-                .portfolio(portfolio)
-                .asset(asset)
-                .quantity(dto.quantity())
-                .price(executionPrice)
-                .type(dto.type())
-                .marketOrderType(dto.orderType())
-                .status(OrderStatus.EXECUTED)
-                .build();
-        Order savedOrder = orderRepositoryPort.save(newOrder);
-
-        Transaction newTransaction = Transaction.builder()
-                .quantity(savedOrder.getQuantity())
-                .price(savedOrder.getPrice())
-                .type(savedOrder.getType())
-                .timestamp(LocalDateTime.now())
-                .portfolio(savedOrder.getPortfolio())
-                .asset(savedOrder.getAsset())
-                .order(savedOrder)
-                .build();
-        transactionRepositoryPort.save(newTransaction);
-
-        return savedOrder;
-    }
-
-    private void updatePortfolioStateForBuy(Portfolio portfolio, BigDecimal totalValue, int quantity, BigDecimal price) {
-        portfolio.setBalance(portfolio.getBalance().subtract(totalValue));
-
-        Optional<Position> existingPositionOpt = positionRepositoryPort.findByPortfolioAndAsset(portfolio, portfolio.getPositions().get(0).getAsset());
-
-        if (existingPositionOpt.isEmpty()) {
-            Position newPosition = new Position();
-            newPosition.setPortfolio(portfolio);
-            newPosition.setAsset(portfolio.getPositions().get(0).getAsset());
-            newPosition.setQuantity(quantity);
-            newPosition.setAveragePrice(price);
-            portfolio.getPositions().add(newPosition);
-        } else {
-            Position existingPosition = existingPositionOpt.get();
-            BigDecimal oldTotalValue = existingPosition.getAveragePrice().multiply(BigDecimal.valueOf(existingPosition.getQuantity()));
-            BigDecimal purchaseTotalValue = price.multiply(BigDecimal.valueOf(quantity));
-            int newTotalQuantity = existingPosition.getQuantity() + quantity;
-            BigDecimal newAveragePrice = (oldTotalValue.add(purchaseTotalValue))
-                    .divide(BigDecimal.valueOf(newTotalQuantity), 2, RoundingMode.HALF_UP);
-
-            existingPosition.setQuantity(newTotalQuantity);
-            existingPosition.setAveragePrice(newAveragePrice);
-        }
-        portfolioRepositoryPort.save(portfolio);
     }
 
     private CreateOrderResponseDTO mapToOrderResponseDTO(Order order) {
