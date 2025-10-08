@@ -49,7 +49,7 @@ public class OrderService implements CreateOrderUseCase {
         if (dto.orderType() == MarketOrderType.MARKET) {
             return processMarketOrder(dto, asset, portfolio);
         } else if (dto.orderType() == MarketOrderType.LIMIT) {
-//            return processLimitOrder(dto, asset, portfolio);
+            return processLimitOrder(dto, asset, portfolio);
         }
 
         throw new IllegalStateException("Tipo de ordem não suportado: " + dto.type());
@@ -165,10 +165,38 @@ public class OrderService implements CreateOrderUseCase {
         throw new IllegalStateException("Tipo de ordem não suportada!");
 
     }
-//
-//    private CreateOrderResponseDTO processLimitOrder(CreateOrderRequestDTO dto, Asset asset, Portfolio portfolio) {
-//
-//    }
+
+    private CreateOrderResponseDTO processLimitOrder(CreateOrderRequestDTO dto, Asset asset, Portfolio portfolio) {
+        BigDecimal totalAssetsValue = dto.price().multiply(BigDecimal.valueOf(dto.quantity()));
+
+        if (dto.type() == OrderType.BUY) {
+            if (totalAssetsValue.compareTo(portfolio.getBalance()) > 0) {
+                throw new InsufficientFundsException("Saldo insuficiente para realizar a compra.");
+            }
+
+        } else if (dto.type() == OrderType.SELL) {
+            Position currentPosition = positionRepositoryPort.findByPortfolioAndAsset(portfolio, asset)
+                    .orElseThrow(() -> new PositionNotFoundException("Posição não encontrada."));
+
+            if (currentPosition.getQuantity() < dto.quantity()) {
+                throw new InsufficientPositionException("Quantidade de posições insuficiente.");
+            }
+        }
+
+        Order newOrder = Order.builder()
+                .portfolio(portfolio)
+                .asset(asset)
+                .quantity(dto.quantity())
+                .price(dto.price())
+                .type(dto.type())
+                .marketOrderType(dto.orderType())
+                .status(OrderStatus.PENDING)
+                .build();
+
+        Order savedOrder = orderRepositoryPort.save(newOrder);
+        return mapToOrderResponseDTO(savedOrder);
+
+    }
 
     private Asset findAssetByTicker(String ticker) {
         return assetRepositoryPort.findByTicker(ticker)
