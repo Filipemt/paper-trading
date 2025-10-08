@@ -113,6 +113,19 @@ public class GlobalExeptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(InsufficientPositionException.class)
+    public ResponseEntity<ErrorResponseDTO> handleInsufficientPositionException(InsufficientPositionException exception) {
+        log.warn("Falha na venda de um ativo. Causa: {}", exception.getMessage());
+
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.UNPROCESSABLE_ENTITY.value(),
+                "Quantidade de posições insuficiente",
+                java.time.LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
     /**
      * Handler específico para erros de validação da anotação @Valid.
      * Retorna um status 400 Bad Request com um corpo JSON detalhando
