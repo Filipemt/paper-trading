@@ -99,18 +99,6 @@ public class GlobalExeptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
 
-    @ExceptionHandler(InsufficientFundsException.class)
-    public ResponseEntity<ErrorResponseDTO> handleInsufficientFundsException(InsufficientFundsException exception) {
-        log.warn("Falha no processamento da transação de um ativo. Causa: {}", exception.getMessage());
-
-        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
-                HttpStatus.UNPROCESSABLE_ENTITY.value(),
-                "Saldo insuficiente para a transação.",
-                java.time.LocalDateTime.now()
-        );
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
-    }
 
     @ExceptionHandler(PositionNotFoundException.class)
     public ResponseEntity<ErrorResponseDTO> handlePositionNotFoundException(PositionNotFoundException exception) {
