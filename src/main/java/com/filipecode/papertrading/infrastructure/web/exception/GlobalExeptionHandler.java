@@ -55,6 +55,18 @@ public class GlobalExeptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
+    @ExceptionHandler(InvalidCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponseDTO handleInvalidCredentials(InvalidCredentialsException ex) {
+        log.warn("Tentativa de login falhou: {}", ex.getMessage());
+
+    return new ErrorResponseDTO(
+            HttpStatus.UNAUTHORIZED.value(),
+            ex.getMessage(),
+            LocalDateTime.now()
+    );
+}
+
 
     @ExceptionHandler(InsufficientFundsException.class)
     public ResponseEntity<ErrorResponseDTO> handleInsufficientFunds(InsufficientFundsException exception) {
