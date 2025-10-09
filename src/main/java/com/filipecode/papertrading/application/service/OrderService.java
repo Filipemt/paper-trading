@@ -52,7 +52,7 @@ public class OrderService implements CreateOrderUseCase {
             return processLimitOrder(dto, asset, portfolio);
         }
 
-        throw new IllegalStateException("Tipo de ordem não suportado: " + dto.type());
+        throw new UnsupportedOrderTypeException("Tipo de ordem não suportado: " + dto.type());
     }
 
 
@@ -162,7 +162,7 @@ public class OrderService implements CreateOrderUseCase {
             return mapToOrderResponseDTO(savedOrder);
         }
 
-        throw new IllegalStateException("Tipo de ordem não suportada!");
+        throw new UnsupportedOrderTypeException("Tipo de ordem não suportada!");
 
     }
 

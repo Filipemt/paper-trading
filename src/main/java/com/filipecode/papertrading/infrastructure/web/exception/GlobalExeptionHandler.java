@@ -1,10 +1,12 @@
 package com.filipecode.papertrading.infrastructure.web.exception;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.filipecode.papertrading.domain.exception.*;
 import com.filipecode.papertrading.infrastructure.web.dto.ErrorResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.naming.AuthenticationException;
+
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,6 +24,37 @@ import java.util.Map;
 public class GlobalExeptionHandler {
 
     private static final String GENERIC_CONFLICT_MESSAGE = "E-mail ou CPF já está cadastrado. Por favor, verifique os dados.";
+
+    @ExceptionHandler({HttpMessageNotReadableException.class, UnsupportedOrderTypeException.class})
+     public ResponseEntity<ErrorResponseDTO> handleInvalidOrderType(Exception exception) {
+        String message;
+
+        if (exception instanceof HttpMessageNotReadableException httpEx &&
+                httpEx.getCause() instanceof InvalidFormatException invalidFormat &&
+                invalidFormat.getTargetType().isEnum()) {
+
+            String invalidValue = String.valueOf(invalidFormat.getValue());
+            message = "Tipo de ordem não suportado: " + invalidValue;
+            log.warn("Enum inválido recebido: {}", invalidValue);
+
+        } else if (exception instanceof UnsupportedOrderTypeException unsupportedEx) {
+            message = unsupportedEx.getMessage();
+            log.warn("Tipo de ordem não suportado. Causa: {}", unsupportedEx.getMessage());
+
+        } else {
+            message = "Corpo da requisição inválido.";
+            log.warn("Erro ao processar corpo da requisição: {}", exception.getMessage());
+        }
+
+    ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+            HttpStatus.BAD_REQUEST.value(),
+            message,
+            LocalDateTime.now()
+    );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
 
     @ExceptionHandler(InsufficientFundsException.class)
     public ResponseEntity<ErrorResponseDTO> handleInsufficientFunds(InsufficientFundsException exception) {
@@ -125,7 +160,6 @@ public class GlobalExeptionHandler {
 
         return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
     }
-
     /**
      * Handler específico para erros de validação da anotação @Valid.
      * Retorna um status 400 Bad Request com um corpo JSON detalhando
