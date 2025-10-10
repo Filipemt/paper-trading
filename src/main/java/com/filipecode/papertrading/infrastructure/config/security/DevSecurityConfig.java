@@ -1,6 +1,10 @@
 package com.filipecode.papertrading.infrastructure.config.security;
 
 import com.filipecode.papertrading.infrastructure.security.SecurityFilter;
+
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -14,6 +18,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@SecurityScheme(
+    name = "bearerAuth",
+    type = SecuritySchemeType.HTTP, 
+    bearerFormat = "JWT", 
+    scheme = "bearer")
 @Profile("dev")
 public class DevSecurityConfig {
 
@@ -31,6 +40,7 @@ public class DevSecurityConfig {
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "swagger-ui/**", "swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )                // Garante que nosso filtro seja executado
