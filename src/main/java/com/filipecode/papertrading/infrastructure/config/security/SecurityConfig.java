@@ -1,6 +1,10 @@
 package com.filipecode.papertrading.infrastructure.config.security;
 
 import com.filipecode.papertrading.infrastructure.security.SecurityFilter;
+
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -14,6 +18,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@SecurityScheme(
+    name = "bearerAuth",
+    type = SecuritySchemeType.HTTP, 
+    bearerFormat = "JWT", 
+    scheme = "bearer")
 @Profile("!dev")
 public class SecurityConfig {
 
@@ -33,6 +42,7 @@ public class SecurityConfig {
                         // Endpoints Públicos
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "swagger-ui/**", "swagger-ui.html").permitAll()
 
                         // Endpoints que exigem a ROLE_USER
                         .requestMatchers("/api/v1/portfolios/**").hasRole("USER")

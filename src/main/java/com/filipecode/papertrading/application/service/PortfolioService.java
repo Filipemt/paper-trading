@@ -1,6 +1,7 @@
 package com.filipecode.papertrading.application.service;
 
 import com.filipecode.papertrading.application.usecase.ViewPortfolioUseCase;
+import com.filipecode.papertrading.domain.exception.PortfolioNotFoundException;
 import com.filipecode.papertrading.domain.model.trading.Position;
 import com.filipecode.papertrading.domain.model.user.Portfolio;
 import com.filipecode.papertrading.domain.model.user.User;
@@ -36,7 +37,7 @@ public class PortfolioService implements ViewPortfolioUseCase {
 
         // Buscar os dados brutos do banco de dados
         Portfolio portfolio = portfolioRepositoryPort.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Portfólio não encontrado"));
+                .orElseThrow(() -> new PortfolioNotFoundException("Portfólio não encontrado"));
 
         // Lógica para calcular totalValue
 

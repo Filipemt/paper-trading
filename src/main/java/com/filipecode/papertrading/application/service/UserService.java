@@ -3,6 +3,7 @@ package com.filipecode.papertrading.application.service;
 import com.filipecode.papertrading.application.usecase.LoginUserUseCase;
 import com.filipecode.papertrading.application.usecase.RegisterUserUseCase;
 import com.filipecode.papertrading.domain.exception.CpfAlreadyExistsException;
+import com.filipecode.papertrading.domain.exception.InvalidCredentialsException;
 import com.filipecode.papertrading.domain.exception.UserAlreadyExistsException;
 import com.filipecode.papertrading.domain.model.user.Portfolio;
 import com.filipecode.papertrading.domain.model.user.User;
@@ -14,6 +15,7 @@ import com.filipecode.papertrading.infrastructure.web.dto.LoginUserRequestDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.RegisterUserRequestDTO;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -69,6 +71,7 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase {
 
     @Override
     public AuthResponseDTO login(LoginUserRequestDTO requestData) {
+        try {
         var usernamePassword = new UsernamePasswordAuthenticationToken(requestData.email(), requestData.password());
 
         var auth = this.authenticationManager.authenticate(usernamePassword);
@@ -82,5 +85,9 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase {
                 user.getName(),
                 token
         );
+
+        } catch(AuthenticationException exception) {
+            throw new InvalidCredentialsException("E-mail ou senha inválidos");
+        }
     }
 }
