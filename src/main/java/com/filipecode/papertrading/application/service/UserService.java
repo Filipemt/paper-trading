@@ -1,10 +1,13 @@
 package com.filipecode.papertrading.application.service;
 
+import com.filipecode.papertrading.application.usecase.DeleteUserUseCase;
 import com.filipecode.papertrading.application.usecase.LoginUserUseCase;
 import com.filipecode.papertrading.application.usecase.RegisterUserUseCase;
 import com.filipecode.papertrading.domain.exception.CpfAlreadyExistsException;
 import com.filipecode.papertrading.domain.exception.InvalidCredentialsException;
 import com.filipecode.papertrading.domain.exception.UserAlreadyExistsException;
+import com.filipecode.papertrading.domain.exception.UserHasOpenPositionsException;
+import com.filipecode.papertrading.domain.exception.UserNotFoundException;
 import com.filipecode.papertrading.domain.model.user.Portfolio;
 import com.filipecode.papertrading.domain.model.user.User;
 import com.filipecode.papertrading.domain.model.user.UserRole;
@@ -15,14 +18,17 @@ import com.filipecode.papertrading.infrastructure.web.dto.LoginUserRequestDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.RegisterUserRequestDTO;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
 @Service
-public class UserService implements RegisterUserUseCase, LoginUserUseCase {
+public class UserService implements RegisterUserUseCase, LoginUserUseCase, DeleteUserUseCase {
     private final UserRepositoryPort userRepositoryPort;
     private final TokenProviderPort tokenProviderPort;
 
@@ -36,6 +42,7 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional
     @Override
     public AuthResponseDTO register(RegisterUserRequestDTO requestData) {
         if (userRepositoryPort.findByEmail(requestData.email()).isPresent()) {
@@ -89,5 +96,21 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase {
         } catch(AuthenticationException exception) {
             throw new InvalidCredentialsException("E-mail ou senha inválidos");
         }
+    }
+
+    @Transactional
+    @Override
+    public void delete() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User authenticatedUser = (User) authentication.getPrincipal();
+
+        User userToDelete = userRepositoryPort.findById(authenticatedUser.getId())
+                .orElseThrow(() -> new UserNotFoundException("Usuário autenticado não encontrado no banco de dados. ID: " + authenticatedUser.getId()));
+
+        if (!userToDelete.getPortfolio().getPositions().isEmpty()) {
+            throw new UserHasOpenPositionsException("Não é possível deletar a conta. O usuário possui posições de ativos em carteira.");
+        }
+
+        userRepositoryPort.deleteById(userToDelete.getId()); 
     }
 }
