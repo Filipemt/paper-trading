@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/portfolio")
-@Tag(name = "Paper-Trading", description = "Controller para listagem de portfolio ")
+@Tag(name = "Portfolio Management", description = "Controller para listagem de portfolio ")
 @SecurityRequirement(name = "bearerAuth")
 public class PortfolioController {
 

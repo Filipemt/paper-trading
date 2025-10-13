@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/assets")
-@Tag(name = "Paper-Trading", description = "Controller para listagem de ativos ")
+@Tag(name = "Asset Management", description = "Controller para listagem de ativos ")
 @SecurityRequirement(name = "bearerAuth")
 public class AssetController {
 

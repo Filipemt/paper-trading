@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/orders")
-@Tag(name = "Paper-Trading", description = "Controller para criação de compra e venda de ativos")
+@Tag(name = "Asset Management", description = "Controller para criação de compra e venda de ativos")
 @SecurityRequirement(name = "bearerAuth")
 public class OrderController {
 
