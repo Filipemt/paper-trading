@@ -133,6 +133,33 @@ public class GlobalExeptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleUserNotFound(UserNotFoundException exception) {
+        log.warn("Usuário não encontrado. Causa: {}", exception.getMessage());
+
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.NOT_FOUND.value(),
+                "Usuário não encontrado.",
+                java.time.LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(UserHasOpenPositionsException.class)
+    public ResponseEntity<ErrorResponseDTO> handleUserHasOpenPositions(UserHasOpenPositionsException exception) {
+        log.warn("Falha ao deletar usuário. Causa: {}", exception.getMessage());
+
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.CONFLICT.value(),
+                exception.getMessage(),
+                java.time.LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
+
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponseDTO> handleAuthenticationException(AuthenticationException exception) {
         log.warn("Falha na autenticação. Causa: {}", exception.getMessage());
