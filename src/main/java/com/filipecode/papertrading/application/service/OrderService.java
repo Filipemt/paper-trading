@@ -9,10 +9,10 @@ import com.filipecode.papertrading.domain.model.user.User;
 import com.filipecode.papertrading.domain.repository.*;
 import com.filipecode.papertrading.infrastructure.web.dto.CreateOrderRequestDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.CreateOrderResponseDTO;
-import jakarta.transaction.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
