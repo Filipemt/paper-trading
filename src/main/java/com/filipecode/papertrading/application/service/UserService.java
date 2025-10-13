@@ -3,6 +3,7 @@ package com.filipecode.papertrading.application.service;
 import com.filipecode.papertrading.application.usecase.DeleteUserUseCase;
 import com.filipecode.papertrading.application.usecase.LoginUserUseCase;
 import com.filipecode.papertrading.application.usecase.RegisterUserUseCase;
+import com.filipecode.papertrading.application.usecase.UpdateUserUseCase;
 import com.filipecode.papertrading.domain.exception.CpfAlreadyExistsException;
 import com.filipecode.papertrading.domain.exception.InvalidCredentialsException;
 import com.filipecode.papertrading.domain.exception.UserAlreadyExistsException;
@@ -16,6 +17,7 @@ import com.filipecode.papertrading.domain.service.TokenProviderPort;
 import com.filipecode.papertrading.infrastructure.web.dto.AuthResponseDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.LoginUserRequestDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.RegisterUserRequestDTO;
+import com.filipecode.papertrading.infrastructure.web.dto.UpdateUserRequestDTO;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -28,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 
 @Service
-public class UserService implements RegisterUserUseCase, LoginUserUseCase, DeleteUserUseCase {
+public class UserService implements RegisterUserUseCase, LoginUserUseCase, DeleteUserUseCase, UpdateUserUseCase {
     private final UserRepositoryPort userRepositoryPort;
     private final TokenProviderPort tokenProviderPort;
 
@@ -112,5 +114,49 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Delet
         }
 
         userRepositoryPort.deleteById(userToDelete.getId()); 
+    }
+
+    @Transactional
+    @Override
+    public AuthResponseDTO update(UpdateUserRequestDTO requestData) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User authenticatedUser = (User) authentication.getPrincipal();
+
+        User userToUpdate = userRepositoryPort.findById(authenticatedUser.getId())
+                .orElseThrow(() -> new UserNotFoundException("Usuário autenticado não encontrado no banco de dados. ID: " + authenticatedUser.getId()));
+
+        boolean needsNewToken = false;
+        if (requestData.email() != null && !requestData.email().isBlank() && !requestData.email().equals(userToUpdate.getEmail())) {
+            userRepositoryPort.findByEmail(requestData.email()).ifPresent(user -> {
+                throw new UserAlreadyExistsException("O e-mail " + requestData.email() + " já está em uso.");
+            });
+            userToUpdate.setEmail(requestData.email());
+            needsNewToken = true;
+        }
+
+        if (requestData.name() != null && !requestData.name().isBlank()) {
+            userToUpdate.setName(requestData.name());
+        }
+
+        if (requestData.password() != null && !requestData.password().isBlank()) {
+            userToUpdate.setPassword(passwordEncoder.encode(requestData.password()));
+        }
+
+        User updatedUser = userRepositoryPort.save(userToUpdate);
+
+        // Atualiza o principal no SecurityContext para refletir as mudanças imediatamente.
+        var newAuthentication = new UsernamePasswordAuthenticationToken(updatedUser, authentication.getCredentials(), authentication.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(newAuthentication);
+
+        String token = null;
+        if (needsNewToken) {
+            // Gera um novo token apenas se o e-mail (username) foi alterado.
+            token = tokenProviderPort.generateToken(updatedUser);
+        }
+
+        return new AuthResponseDTO(
+                updatedUser.getId(),
+                updatedUser.getName(),
+                token);
     }
 }
