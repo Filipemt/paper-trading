@@ -1,6 +1,7 @@
 package com.filipecode.papertrading.application.service;
 
 import com.filipecode.papertrading.application.usecase.CreateOrderUseCase;
+import com.filipecode.papertrading.application.usecase.CancelOrderUseCase;
 import com.filipecode.papertrading.domain.exception.*;
 import com.filipecode.papertrading.domain.model.asset.Asset;
 import com.filipecode.papertrading.domain.model.trading.*;
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
-public class OrderService implements CreateOrderUseCase {
+public class OrderService implements CreateOrderUseCase, CancelOrderUseCase {
 
     private final AssetRepositoryPort assetRepositoryPort;
     private final PortfolioRepositoryPort portfolioRepositoryPort;
@@ -219,5 +220,26 @@ public class OrderService implements CreateOrderUseCase {
                 order.getStatus(),
                 order.getCreatedAt()
         );
+    }
+
+    @Override
+    @Transactional
+    public void cancel(Long orderId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+        Portfolio portfolio = findPortfolioByUser(user);
+
+        // Busca a ordem garantindo que ela pertence ao portfólio do usuário autenticado.
+        Order orderToCancel = orderRepositoryPort.findByIdAndPortfolio(orderId, portfolio)
+                .orElseThrow(() -> new OrderNotFoundException("Ordem com ID " + orderId + " não encontrada para este usuário."));
+
+        // Valida a regra de negócio: só pode cancelar ordens pendentes.
+        if (orderToCancel.getStatus() != OrderStatus.PENDING) {
+            throw new OrderCannotBeCancelledException("A ordem não pode ser cancelada pois seu status é " + orderToCancel.getStatus());
+        }
+
+        // Altera o status e salva.
+        orderToCancel.setStatus(OrderStatus.CANCELLED);
+        orderRepositoryPort.save(orderToCancel);
     }
 }

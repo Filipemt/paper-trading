@@ -199,6 +199,34 @@ public class GlobalExeptionHandler {
 
         return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
     }
+
+    
+    @ExceptionHandler(OrderCannotBeCancelledException.class)
+    public ResponseEntity<ErrorResponseDTO> handleOrderCannotBeCancelled(OrderCannotBeCancelledException exception) {
+        log.warn("Falha ao cancelar ordem. Causa: {}", exception.getMessage());
+
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.CONFLICT.value(),
+                exception.getMessage(),
+                java.time.LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleOrderNotFound(OrderNotFoundException exception) {
+        log.warn("Ordem não encontrada. Causa: {}", exception.getMessage());
+
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.NOT_FOUND.value(),
+                exception.getMessage(),
+                java.time.LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
     /**
      * Handler específico para erros de validação da anotação @Valid.
      * Retorna um status 400 Bad Request com um corpo JSON detalhando
@@ -218,5 +246,22 @@ public class GlobalExeptionHandler {
         return errors;
     }
 
+    /**
+     * Handler genérico para capturar qualquer outra exceção não tratada.
+     * Garante que a API sempre retorne um erro 500 bem formatado em vez de
+     * respostas inesperadas do Spring ou do servidor de aplicação.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponseDTO> handleGenericException(Exception exception) {
+        log.error("Erro inesperado no servidor. Causa: {}", exception.getMessage(), exception);
+
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Ocorreu um erro inesperado no servidor. Por favor, tente novamente mais tarde.",
+                java.time.LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
 }

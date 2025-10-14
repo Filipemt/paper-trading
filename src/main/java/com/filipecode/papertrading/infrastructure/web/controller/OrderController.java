@@ -1,6 +1,7 @@
 package com.filipecode.papertrading.infrastructure.web.controller;
 
 import com.filipecode.papertrading.application.usecase.CreateOrderUseCase;
+import com.filipecode.papertrading.application.usecase.CancelOrderUseCase;
 import com.filipecode.papertrading.infrastructure.web.dto.CreateOrderRequestDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.CreateOrderResponseDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.ErrorResponseDTO;
@@ -14,21 +15,20 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/orders")
-@Tag(name = "Asset Management", description = "Controller para criação de compra e venda de ativos")
+@Tag(name = "Order Management", description = "Controller para criação de compra e venda de ativos")
 @SecurityRequirement(name = "bearerAuth")
 public class OrderController {
 
     private final CreateOrderUseCase orderUseCase;
+    private final CancelOrderUseCase cancelOrderUseCase;
 
-    public OrderController(CreateOrderUseCase orderUseCase) {
+    public OrderController(CreateOrderUseCase orderUseCase, CancelOrderUseCase cancelOrderUseCase) {
         this.orderUseCase = orderUseCase;
+        this.cancelOrderUseCase = cancelOrderUseCase;
     }
 
     @PostMapping
@@ -57,5 +57,23 @@ public class OrderController {
 })
     public ResponseEntity<CreateOrderResponseDTO> createOrder(@Valid @RequestBody CreateOrderRequestDTO dto) {
         return ResponseEntity.status(201).body(orderUseCase.createOrder(dto));
+    }
+
+    @DeleteMapping("/{orderId}")
+    @Operation(summary = "Cancela uma ordem pendente", description = "Cancela uma ordem de compra ou venda que ainda não foi executada (status PENDING). O usuário só pode cancelar suas próprias ordens.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Ordem cancelada com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não Autenticado",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Ordem não encontrada para o usuário.",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "409", description = "Conflito. A ordem não pode ser cancelada (ex: já foi executada).",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Erro do servidor",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
+    public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
+        cancelOrderUseCase.cancel(orderId);
+        return ResponseEntity.noContent().build();
     }
 }
