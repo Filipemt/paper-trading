@@ -2,8 +2,10 @@ package com.filipecode.papertrading.infrastructure.web.controller;
 
 import com.filipecode.papertrading.application.usecase.CreateOrderUseCase;
 import com.filipecode.papertrading.application.usecase.CancelOrderUseCase;
+import com.filipecode.papertrading.application.usecase.ListOrdersUseCase;
 import com.filipecode.papertrading.infrastructure.web.dto.CreateOrderRequestDTO;
-import com.filipecode.papertrading.infrastructure.web.dto.CreateOrderResponseDTO;
+import com.filipecode.papertrading.infrastructure.web.dto.OrderFilterDTO;
+import com.filipecode.papertrading.infrastructure.web.dto.OrderResponseDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.ErrorResponseDTO;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +16,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,10 +32,12 @@ public class OrderController {
 
     private final CreateOrderUseCase orderUseCase;
     private final CancelOrderUseCase cancelOrderUseCase;
+    private final ListOrdersUseCase listOrdersUseCase;
 
-    public OrderController(CreateOrderUseCase orderUseCase, CancelOrderUseCase cancelOrderUseCase) {
+    public OrderController(CreateOrderUseCase orderUseCase, CancelOrderUseCase cancelOrderUseCase, ListOrdersUseCase listOrdersUseCase) {
         this.orderUseCase = orderUseCase;
         this.cancelOrderUseCase = cancelOrderUseCase;
+        this.listOrdersUseCase = listOrdersUseCase;
     }
 
     @PostMapping
@@ -36,7 +45,7 @@ public class OrderController {
     @ApiResponses(value = {
     @ApiResponse(responseCode = "201", description = "Ordem criada com sucesso",
                     content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = CreateOrderResponseDTO.class))
+                    schema = @Schema(implementation = OrderResponseDTO.class))
     ),
     @ApiResponse(responseCode = "400", description = "Requisição Inválida. Ocorre por dados de entrada malformados (ex: CPF, e-mail inválido), ou por violação de uma regra de negócio (ex: saldo insuficiente, posição insuficiente).",
                     content = @Content(mediaType = "application/json",
@@ -55,7 +64,7 @@ public class OrderController {
                     schema = @Schema(implementation = ErrorResponseDTO.class))
     )
 })
-    public ResponseEntity<CreateOrderResponseDTO> createOrder(@Valid @RequestBody CreateOrderRequestDTO dto) {
+    public ResponseEntity<OrderResponseDTO> createOrder(@Valid @RequestBody CreateOrderRequestDTO dto) {
         return ResponseEntity.status(201).body(orderUseCase.createOrder(dto));
     }
 
@@ -75,5 +84,21 @@ public class OrderController {
     public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
         cancelOrderUseCase.cancel(orderId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping
+    @Operation(summary = "Lista as ordens do usuário autenticado com filtros opcionais")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de ordens retornada com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não Autenticado. É necessário enviar um token JWT válido no cabeçalho 'Authorization'.",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Erro do servidor",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
+    public ResponseEntity<Page<OrderResponseDTO>> listOrders(@ParameterObject @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+                                                             @ParameterObject OrderFilterDTO filters
+    ) {
+        Page<OrderResponseDTO> listedOrders = listOrdersUseCase.listOrders(filters, pageable);
+        return ResponseEntity.ok(listedOrders);
     }
 }

@@ -7,7 +7,7 @@ import com.filipecode.papertrading.domain.model.trading.OrderType;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public record CreateOrderResponseDTO(
+public record OrderResponseDTO(
         Long id,
         String ticker,
         Integer quantity,

@@ -1,8 +1,8 @@
 package com.filipecode.papertrading.application.usecase;
 
 import com.filipecode.papertrading.infrastructure.web.dto.CreateOrderRequestDTO;
-import com.filipecode.papertrading.infrastructure.web.dto.CreateOrderResponseDTO;
+import com.filipecode.papertrading.infrastructure.web.dto.OrderResponseDTO;
 
 public interface CreateOrderUseCase {
-    CreateOrderResponseDTO createOrder(CreateOrderRequestDTO dto);
+    OrderResponseDTO createOrder(CreateOrderRequestDTO dto);
 }
