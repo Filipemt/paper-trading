@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/transactions")
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "Transactions", description = "Endpoints for viewing transaction history") // Add Swagger tag
+@Tag(name = "Transactions", description = "Endpoints para listar o histórico de transações do usuário") // Add Swagger tag
 public class TransactionController {
 
     private final ListTransactionsUseCase listTransactionsUseCase;
