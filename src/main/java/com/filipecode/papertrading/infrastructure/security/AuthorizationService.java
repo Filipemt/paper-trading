@@ -1,6 +1,6 @@
 package com.filipecode.papertrading.infrastructure.security;
 
-import com.filipecode.papertrading.domain.repository.UserRepositoryPort;
+import com.filipecode.papertrading.application.port.out.UserRepositoryPort;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

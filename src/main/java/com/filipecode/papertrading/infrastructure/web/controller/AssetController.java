@@ -1,7 +1,7 @@
 package com.filipecode.papertrading.infrastructure.web.controller;
 
-import com.filipecode.papertrading.application.usecase.FindAssetByTickerUseCase;
-import com.filipecode.papertrading.application.usecase.ListAssetsUseCase;
+import com.filipecode.papertrading.application.port.in.FindAssetByTickerUseCase;
+import com.filipecode.papertrading.application.port.in.ListAssetsUseCase;
 import com.filipecode.papertrading.domain.model.asset.AssetType;
 import com.filipecode.papertrading.infrastructure.web.dto.AssetResponseDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.ErrorResponseDTO;

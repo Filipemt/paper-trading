@@ -1,9 +1,9 @@
 package com.filipecode.papertrading.application.service;
 
-import com.filipecode.papertrading.application.usecase.DeleteUserUseCase;
-import com.filipecode.papertrading.application.usecase.LoginUserUseCase;
-import com.filipecode.papertrading.application.usecase.RegisterUserUseCase;
-import com.filipecode.papertrading.application.usecase.UpdateUserUseCase;
+import com.filipecode.papertrading.application.port.in.DeleteUserUseCase;
+import com.filipecode.papertrading.application.port.in.LoginUserUseCase;
+import com.filipecode.papertrading.application.port.in.RegisterUserUseCase;
+import com.filipecode.papertrading.application.port.in.UpdateUserUseCase;
 import com.filipecode.papertrading.domain.exception.CpfAlreadyExistsException;
 import com.filipecode.papertrading.domain.exception.InvalidCredentialsException;
 import com.filipecode.papertrading.domain.exception.UserAlreadyExistsException;
@@ -12,8 +12,8 @@ import com.filipecode.papertrading.domain.exception.UserNotFoundException;
 import com.filipecode.papertrading.domain.model.user.Portfolio;
 import com.filipecode.papertrading.domain.model.user.User;
 import com.filipecode.papertrading.domain.model.user.UserRole;
-import com.filipecode.papertrading.domain.repository.UserRepositoryPort;
-import com.filipecode.papertrading.domain.service.TokenProviderPort;
+import com.filipecode.papertrading.application.port.out.UserRepositoryPort;
+import com.filipecode.papertrading.application.port.out.TokenProviderPort;
 import com.filipecode.papertrading.infrastructure.web.dto.AuthResponseDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.LoginUserRequestDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.RegisterUserRequestDTO;

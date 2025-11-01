@@ -1,6 +1,6 @@
 package com.filipecode.papertrading.infrastructure.web.controller;
 
-import com.filipecode.papertrading.application.usecase.ViewPortfolioUseCase;
+import com.filipecode.papertrading.application.port.in.ViewPortfolioUseCase;
 import com.filipecode.papertrading.infrastructure.web.dto.ErrorResponseDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.PortfolioResponseDTO;
 

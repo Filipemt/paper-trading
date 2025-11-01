@@ -1,8 +1,8 @@
 package com.filipecode.papertrading.infrastructure.web.controller;
 
-import com.filipecode.papertrading.application.usecase.CreateOrderUseCase;
-import com.filipecode.papertrading.application.usecase.CancelOrderUseCase;
-import com.filipecode.papertrading.application.usecase.ListOrdersUseCase;
+import com.filipecode.papertrading.application.port.in.CreateOrderUseCase;
+import com.filipecode.papertrading.application.port.in.CancelOrderUseCase;
+import com.filipecode.papertrading.application.port.in.ListOrdersUseCase;
 import com.filipecode.papertrading.infrastructure.web.dto.CreateOrderRequestDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.OrderFilterDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.OrderResponseDTO;

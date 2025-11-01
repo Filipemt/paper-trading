@@ -1,7 +1,7 @@
 package com.filipecode.papertrading.infrastructure.web.controller;
 
-import com.filipecode.papertrading.application.usecase.LoginUserUseCase;
-import com.filipecode.papertrading.application.usecase.RegisterUserUseCase;
+import com.filipecode.papertrading.application.port.in.LoginUserUseCase;
+import com.filipecode.papertrading.application.port.in.RegisterUserUseCase;
 import com.filipecode.papertrading.infrastructure.web.dto.AuthResponseDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.ErrorResponseDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.LoginUserRequestDTO;

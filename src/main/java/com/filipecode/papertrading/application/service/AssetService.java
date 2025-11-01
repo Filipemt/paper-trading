@@ -1,12 +1,12 @@
 package com.filipecode.papertrading.application.service;
 
-import com.filipecode.papertrading.application.usecase.FindAssetByTickerUseCase;
-import com.filipecode.papertrading.application.usecase.ListAssetsUseCase;
+import com.filipecode.papertrading.application.port.in.FindAssetByTickerUseCase;
+import com.filipecode.papertrading.application.port.in.ListAssetsUseCase;
 import com.filipecode.papertrading.domain.exception.AssetNotFoundException;
 import com.filipecode.papertrading.domain.model.asset.Asset;
 import com.filipecode.papertrading.domain.model.asset.AssetType;
-import com.filipecode.papertrading.domain.repository.AssetRepositoryPort;
-import com.filipecode.papertrading.domain.repository.PriceProviderPort;
+import com.filipecode.papertrading.application.port.out.AssetRepositoryPort;
+import com.filipecode.papertrading.application.port.out.PriceProviderPort;
 import com.filipecode.papertrading.infrastructure.web.dto.AssetResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
