@@ -1,7 +1,7 @@
 package com.filipecode.papertrading.infrastructure.security;
 
 import com.filipecode.papertrading.domain.model.user.User;
-import com.filipecode.papertrading.domain.service.TokenProviderPort;
+import com.filipecode.papertrading.application.port.out.TokenProviderPort;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 

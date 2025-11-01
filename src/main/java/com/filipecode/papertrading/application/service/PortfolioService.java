@@ -1,12 +1,12 @@
 package com.filipecode.papertrading.application.service;
 
-import com.filipecode.papertrading.application.usecase.ViewPortfolioUseCase;
+import com.filipecode.papertrading.application.port.in.ViewPortfolioUseCase;
 import com.filipecode.papertrading.domain.exception.PortfolioNotFoundException;
 import com.filipecode.papertrading.domain.model.trading.Position;
 import com.filipecode.papertrading.domain.model.user.Portfolio;
 import com.filipecode.papertrading.domain.model.user.User;
-import com.filipecode.papertrading.domain.repository.PortfolioRepositoryPort;
-import com.filipecode.papertrading.domain.repository.PriceProviderPort;
+import com.filipecode.papertrading.application.port.out.PortfolioRepositoryPort;
+import com.filipecode.papertrading.application.port.out.PriceProviderPort;
 import com.filipecode.papertrading.infrastructure.web.dto.PortfolioResponseDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.PositionResponseDTO;
 import org.springframework.security.core.Authentication;

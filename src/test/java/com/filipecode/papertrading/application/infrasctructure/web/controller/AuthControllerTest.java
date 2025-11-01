@@ -2,9 +2,9 @@ package com.filipecode.papertrading.application.infrasctructure.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.filipecode.papertrading.application.usecase.RegisterUserUseCase;
+import com.filipecode.papertrading.application.port.in.RegisterUserUseCase;
 import com.filipecode.papertrading.domain.exception.UserAlreadyExistsException;
-import com.filipecode.papertrading.infrastructure.config.security.DevSecurityConfig;
+import com.filipecode.papertrading.infrastructure.security.config.DevSecurityConfig;
 import com.filipecode.papertrading.infrastructure.web.controller.AuthController;
 import com.filipecode.papertrading.infrastructure.web.dto.AuthResponseDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.RegisterUserRequestDTO;

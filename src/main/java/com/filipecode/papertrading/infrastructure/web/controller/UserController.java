@@ -1,7 +1,7 @@
 package com.filipecode.papertrading.infrastructure.web.controller;
 
-import com.filipecode.papertrading.application.usecase.DeleteUserUseCase;
-import com.filipecode.papertrading.application.usecase.UpdateUserUseCase;
+import com.filipecode.papertrading.application.port.in.DeleteUserUseCase;
+import com.filipecode.papertrading.application.port.in.UpdateUserUseCase;
 import com.filipecode.papertrading.infrastructure.web.dto.AuthResponseDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.ErrorResponseDTO;
 import com.filipecode.papertrading.infrastructure.web.dto.UpdateUserRequestDTO;

@@ -1,7 +1,7 @@
 package com.filipecode.papertrading.infrastructure.security;
 
-import com.filipecode.papertrading.domain.repository.UserRepositoryPort;
-import com.filipecode.papertrading.domain.service.TokenProviderPort;
+import com.filipecode.papertrading.application.port.out.UserRepositoryPort;
+import com.filipecode.papertrading.application.port.out.TokenProviderPort;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,6 +1,6 @@
 package com.filipecode.papertrading.infrastructure.web.controller;
 
-import com.filipecode.papertrading.application.usecase.ListTransactionsUseCase;
+import com.filipecode.papertrading.application.port.in.ListTransactionsUseCase;
 import com.filipecode.papertrading.infrastructure.web.dto.TransactionResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

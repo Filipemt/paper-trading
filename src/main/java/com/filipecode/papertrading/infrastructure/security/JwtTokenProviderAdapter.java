@@ -5,7 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.filipecode.papertrading.domain.model.user.User;
-import com.filipecode.papertrading.domain.service.TokenProviderPort;
+import com.filipecode.papertrading.application.port.out.TokenProviderPort;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
