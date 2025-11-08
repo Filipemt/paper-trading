@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 
 @Service
-@Profile("!dev")
 public class JwtTokenProviderAdapter implements TokenProviderPort {
 
     private final String secretKey;
